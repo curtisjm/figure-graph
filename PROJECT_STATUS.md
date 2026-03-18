@@ -2,7 +2,7 @@
 
 ## Overview
 
-Figure Graph is a Next.js application for visualizing the ISTD (International Standard of Teachers of Dancing) ballroom dance syllabus as an interactive directed graph. Users can browse figures for each dance, explore precede/follow relationships between figures, and traverse the graph visually. The app is a personal project being built iteratively with AI agents.
+Figure Graph is a Next.js application for visualizing the ISTD (Imperial Society of Teachers of Dancing) ballroom dance syllabus as an interactive directed graph. Users can browse figures for each dance, explore precede/follow relationships between figures, and traverse the graph visually. The app is a personal project being built iteratively with AI agents.
 
 ## Tech Stack
 
@@ -10,7 +10,7 @@ Figure Graph is a Next.js application for visualizing the ISTD (International St
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4 (CSS-native config via `@theme inline`), shadcn/ui (New York style, dark theme)
 - **Graph Visualization**: React Flow (@xyflow/react v12)
-- **API Layer**: tRPC v11 with superjson (currently unused — server components query DB directly)
+- **API Layer**: tRPC v11 with superjson (routine endpoints now auth-scoped; most reads still use server components + direct DB)
 - **ORM**: Drizzle ORM 0.45 with Neon PostgreSQL (serverless HTTP driver)
 - **Package Manager**: pnpm
 - **Dev Environment**: Nix flakes (flake.nix provides Node.js 22, pnpm)
@@ -45,7 +45,7 @@ src/
     utils.ts                    # cn() utility for class merging
 
 data/                           # YAML source of truth
-  {dance}/{level}/*.yaml        # One file per figure (134 total)
+  {dance}/{level}/*.yaml        # One file per figure (135 total)
   extracted/                    # Backup of original extraction
 scripts/
   seed.ts                       # Wipe-and-reseed DB from YAML files
@@ -78,6 +78,8 @@ scripts/
 3. **Seeding**: `pnpm db:seed` wipes all tables and rebuilds from YAML. Edge matching uses fuzzy name matching (abbreviation expansion, compound name matching, condition prefix extraction). Current match rate: ~77%
 4. **Schema sync**: `pnpm db:push` applies Drizzle schema changes to Neon
 
+Current data set note: Viennese Waltz YAML source files are not present yet, so seeded figure content currently focuses on Waltz/Foxtrot/Quickstep/Tango.
+
 ## Current Features
 
 ### Implemented
@@ -88,7 +90,11 @@ scripts/
 - **Local figure graph view**: Center figure with glow effect, precedes stacked on left, follows stacked on right. Figures grouped by level within each side with extra spacing between groups. Figures appearing in both precede and follow sets get a node on each side.
 - **Graph traversal**: Clicking a node in local graph view navigates to that node's local graph
 - **Level filter toggles**: Bronze/Silver/Gold toggle buttons to show/hide figures by exam level in both graph views
-- **Client-side navigation**: All internal links use Next.js `<Link>` for SPA-like navigation
+- **Client-side navigation**: All internal links (including graph nodes) use Next.js `<Link>` for SPA-like navigation
+- **Route consistency checks**: Figure detail and local graph pages validate that figure IDs belong to the dance slug in the URL
+- **Local graph filter behavior**: The center figure remains visible even if its level is toggled off
+- **Routine API auth scoping**: Routine list/get/create/delete procedures now derive user identity from server auth context
+- **Schema/index hardening**: Added indexes for common lookup paths and a unique transition index for figure edges; seed script now deduplicates repeated edges before insert
 - **Dark theme**: oklch-based color system with ISTD level colors — Bronze (#CD7F32), Silver (#C0C0C0), Gold (#FFD700)
 
 ### Design Decisions

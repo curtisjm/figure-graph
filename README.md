@@ -53,7 +53,7 @@ The syllabus defines which figures can legally connect to each other. For exampl
 | Database | [PostgreSQL](https://www.postgresql.org/) via [Neon](https://neon.tech/) | Serverless PostgreSQL |
 | ORM | [Drizzle](https://orm.drizzle.team/) | TypeScript-first SQL ORM |
 | API | [tRPC v11](https://trpc.io/) | End-to-end typesafe API layer |
-| Auth | [Clerk](https://clerk.com/) | Authentication (placeholder, not yet wired) |
+| Auth | [Clerk](https://clerk.com/) | Authentication dependency installed; full UI flow not yet wired |
 | Package Manager | [pnpm](https://pnpm.io/) | Fast, disk-efficient package manager |
 | Dev Environment | [Nix](https://nixos.org/) flake | Reproducible development environment |
 
@@ -179,15 +179,20 @@ This project is in early scaffolding. Current state:
 - [x] Next.js project with dark theme and level accent colors
 - [x] Database schema for figures, edges, routines
 - [x] tRPC API with dance/figure/routine routers
-- [x] Page structure with placeholder content
+- [x] Live server-rendered dance, figure, and graph pages
 - [x] PDF extraction script
 - [x] Database seed script
-- [ ] React Flow graph visualization
-- [ ] Live data on pages (currently placeholder)
+- [x] React Flow full and local graph visualization
+- [x] Figure route slug integrity checks (`/dances/[dance]/figures/[id]`)
+- [x] Routine tRPC endpoints locked to authenticated users
 - [ ] Clerk authentication
 - [ ] Routine builder UI
 - [ ] AI choreography assistant
 - [ ] Framer Motion animations
+
+Known data gap:
+
+- Viennese Waltz YAML source files are not yet present in `data/`, so seeded data is currently focused on Waltz/Foxtrot/Quickstep/Tango.
 
 ## License
 
