@@ -464,7 +464,16 @@ async function seed() {
 
   let edgesInserted = 0;
   let edgesUnmatched = 0;
+  let edgesDeduped = 0;
   const unmatchedExamples: string[] = [];
+  const insertedEdgeKeys = new Set<string>();
+
+  const makeEdgeKey = (
+    sourceFigureId: number,
+    targetFigureId: number,
+    level: "associate" | "licentiate" | "fellow",
+    conditions: string | null,
+  ) => `${sourceFigureId}:${targetFigureId}:${level}:${normalizeText(conditions ?? "").toLowerCase()}`;
 
   for (const fig of figures) {
     const figKey = `${fig.dance}:${fig.figure_name}:${fig.variant_name ?? ""}`;
@@ -504,12 +513,27 @@ async function seed() {
             continue;
           }
 
+          const normalizedConditions = entry.conditions
+            ? normalizeText(entry.conditions)
+            : null;
+          const edgeKey = makeEdgeKey(
+            sourceId,
+            targetId,
+            edgeLevel,
+            normalizedConditions,
+          );
+          if (insertedEdgeKeys.has(edgeKey)) {
+            edgesDeduped++;
+            continue;
+          }
+
           await db.insert(schema.figureEdges).values({
             sourceFigureId: sourceId,
             targetFigureId: targetId,
             level: edgeLevel,
-            conditions: entry.conditions,
+            conditions: normalizedConditions,
           });
+          insertedEdgeKeys.add(edgeKey);
           edgesInserted++;
         }
       }
@@ -545,12 +569,27 @@ async function seed() {
             continue;
           }
 
+          const normalizedConditions = entry.conditions
+            ? normalizeText(entry.conditions)
+            : null;
+          const edgeKey = makeEdgeKey(
+            precedeId,
+            sourceId,
+            edgeLevel,
+            normalizedConditions,
+          );
+          if (insertedEdgeKeys.has(edgeKey)) {
+            edgesDeduped++;
+            continue;
+          }
+
           await db.insert(schema.figureEdges).values({
             sourceFigureId: precedeId,
             targetFigureId: sourceId,
             level: edgeLevel,
-            conditions: entry.conditions,
+            conditions: normalizedConditions,
           });
+          insertedEdgeKeys.add(edgeKey);
           edgesInserted++;
         }
       }
@@ -558,6 +597,7 @@ async function seed() {
   }
 
   console.log(`  Inserted ${edgesInserted} edges`);
+  console.log(`  Deduplicated ${edgesDeduped} duplicate edge(s)`);
   console.log(`  Unmatched: ${edgesUnmatched}`);
   if (unmatchedExamples.length > 0) {
     console.log("\n  Sample unmatched edges:");
