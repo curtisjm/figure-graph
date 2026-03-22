@@ -17,6 +17,7 @@ export type FigureNodeData = {
   figureId: number;
   isCenterNode?: boolean;
   linkToGraph?: boolean;
+  handleDirection?: "horizontal" | "vertical";
 };
 
 export type FigureNode = Node<FigureNodeData, "figure">;
@@ -27,9 +28,13 @@ export function FigureNode({ data }: NodeProps<FigureNode>) {
     ? `/dances/${data.danceSlug}/figures/${data.figureId}/graph`
     : `/dances/${data.danceSlug}/figures/${data.figureId}`;
 
+  const isVertical = data.handleDirection === "vertical";
+  const targetPos = isVertical ? Position.Top : Position.Left;
+  const sourcePos = isVertical ? Position.Bottom : Position.Right;
+
   return (
     <>
-      <Handle type="target" position={Position.Left} className="!bg-muted-foreground !w-2 !h-2" />
+      <Handle type="target" position={targetPos} className="!bg-muted-foreground !w-2 !h-2" />
       <Link
         href={href}
         className="block px-4 py-2.5 rounded-lg bg-card border-2 hover:brightness-125 transition-all cursor-pointer text-center"
@@ -42,7 +47,7 @@ export function FigureNode({ data }: NodeProps<FigureNode>) {
           {data.label}
         </div>
       </Link>
-      <Handle type="source" position={Position.Right} className="!bg-muted-foreground !w-2 !h-2" />
+      <Handle type="source" position={sourcePos} className="!bg-muted-foreground !w-2 !h-2" />
     </>
   );
 }

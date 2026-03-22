@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -16,6 +16,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { FigureNode, type FigureNodeData } from "./figure-node";
+import { computeFullGraphLayout } from "./full-layout";
 
 const EDGE_COLOR = "#888";
 
@@ -39,6 +40,12 @@ const TOGGLE_CONFIG: { key: LevelGroup; label: string; color: string }[] = [
   { key: "bronze", label: "Bronze", color: "#CD7F32" },
   { key: "silver", label: "Silver", color: "#C0C0C0" },
   { key: "gold", label: "Gold", color: "#FFD700" },
+];
+
+const LEVEL_LEGEND = [
+  { label: "Bronze (Student Teacher + Associate)", color: "#CD7F32" },
+  { label: "Silver (Licentiate)", color: "#C0C0C0" },
+  { label: "Gold (Fellow)", color: "#FFD700" },
 ];
 
 export interface GraphFigure {
@@ -193,59 +200,47 @@ function layoutLocal(
 
 function layoutFull(
   figures: GraphFigure[],
+  edges: GraphEdge[],
   danceSlug: string
 ): Node<FigureNodeData>[] {
-  const levels = ["student_teacher", "associate", "licentiate", "fellow"];
-  const grouped = new Map<string, GraphFigure[]>();
-  for (const level of levels) grouped.set(level, []);
-  for (const fig of figures) {
-    grouped.get(fig.level)?.push(fig);
-  }
+  const positioned = computeFullGraphLayout(
+    figures.map((figure) => ({ id: String(figure.id) })),
+    edges.map((edge) => ({
+      source: String(edge.sourceFigureId),
+      target: String(edge.targetFigureId),
+    }))
+  );
 
-  const nodes: Node<FigureNodeData>[] = [];
-  const xGap = 220;
-  const yGap = 150;
+  const positionById = new Map(
+    positioned.map((node) => [node.id, node.position])
+  );
 
-  let y = 0;
-  for (const level of levels) {
-    const group = grouped.get(level) ?? [];
-    if (group.length === 0) continue;
-
-    const totalWidth = group.length * xGap;
-    let x = -totalWidth / 2;
-
-    for (const fig of group) {
-      nodes.push({
-        id: String(fig.id),
-        type: "figure",
-        position: { x, y },
-        data: makeNodeData(fig, danceSlug),
-      });
-      x += xGap;
-    }
-    y += yGap;
-  }
-
-  return nodes;
+  return figures.map((fig) => ({
+    id: String(fig.id),
+    type: "figure",
+    position: positionById.get(String(fig.id)) ?? { x: 0, y: 0 },
+    data: { ...makeNodeData(fig, danceSlug), handleDirection: "vertical" as const },
+  }));
 }
 
 type MappedGraphEdge = GraphEdge & { _sourceNode?: string; _targetNode?: string };
 
-function buildEdges(edges: MappedGraphEdge[]): Edge[] {
+function buildEdges(edges: MappedGraphEdge[], opts?: { isFullGraph?: boolean }): Edge[] {
+  const isFullGraph = opts?.isFullGraph ?? false;
   return edges.map((edge) => ({
     id: `e${edge.id}${edge._sourceNode ? "-pre" : ""}${edge._targetNode ? "-fol" : ""}`,
     source: edge._sourceNode ?? String(edge.sourceFigureId),
     target: edge._targetNode ?? String(edge.targetFigureId),
     style: {
       stroke: EDGE_COLOR,
-      strokeWidth: 1.5,
-      opacity: 0.4,
+      strokeWidth: isFullGraph ? 1 : 1.5,
+      opacity: isFullGraph ? 0.6 : 0.4,
     },
     markerEnd: {
       type: MarkerType.ArrowClosed,
       color: EDGE_COLOR,
-      width: 15,
-      height: 15,
+      width: isFullGraph ? 10 : 15,
+      height: isFullGraph ? 10 : 15,
     },
   }));
 }
@@ -255,14 +250,26 @@ const nodeTypes: NodeTypes = {
 };
 
 export function DanceGraph({ danceSlug, figures, edges, centerFigureId }: DanceGraphProps) {
+  const isFullGraph = centerFigureId == null;
+
   const [enabledLevels, setEnabledLevels] = useState<Record<LevelGroup, boolean>>({
     bronze: true,
     silver: true,
     gold: true,
   });
 
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
   const toggleLevel = useCallback((group: LevelGroup) => {
     setEnabledLevels((prev) => ({ ...prev, [group]: !prev[group] }));
+  }, []);
+
+  const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
+    setHoveredNodeId(node.id);
+  }, []);
+
+  const onNodeMouseLeave = useCallback(() => {
+    setHoveredNodeId(null);
   }, []);
 
   const filteredFigures = useMemo(() => {
@@ -270,15 +277,16 @@ export function DanceGraph({ danceSlug, figures, edges, centerFigureId }: DanceG
       (f) => enabledLevels[LEVEL_TO_GROUP[f.level] ?? "bronze"]
     );
 
-    if (centerFigureId == null) return visible;
-
-    if (visible.some((f) => f.id === centerFigureId)) {
-      return visible;
+    if (!isFullGraph) {
+      if (visible.some((f) => f.id === centerFigureId)) {
+        return visible;
+      }
+      const centerFigure = figures.find((f) => f.id === centerFigureId);
+      return centerFigure ? [...visible, centerFigure] : visible;
     }
 
-    const centerFigure = figures.find((f) => f.id === centerFigureId);
-    return centerFigure ? [...visible, centerFigure] : visible;
-  }, [figures, enabledLevels, centerFigureId]);
+    return visible;
+  }, [figures, enabledLevels, centerFigureId, isFullGraph]);
 
   const visibleIds = useMemo(
     () => new Set(filteredFigures.map((f) => f.id)),
@@ -286,23 +294,75 @@ export function DanceGraph({ danceSlug, figures, edges, centerFigureId }: DanceG
   );
 
   const filteredEdges = useMemo(
-    () => edges.filter((e) => visibleIds.has(e.sourceFigureId) && visibleIds.has(e.targetFigureId)),
-    [edges, visibleIds]
+    () => edges.filter((e) =>
+      visibleIds.has(e.sourceFigureId) &&
+      visibleIds.has(e.targetFigureId) &&
+      enabledLevels[LEVEL_TO_GROUP[e.level] ?? "bronze"]
+    ),
+    [edges, visibleIds, enabledLevels]
   );
 
-  const { computedNodes, computedEdges } = useMemo(() => {
-    if (centerFigureId != null) {
-      const local = layoutLocal(filteredFigures, filteredEdges, centerFigureId, danceSlug);
-      return { computedNodes: local.nodes, computedEdges: buildEdges(local.edges) };
+  // Layout is computed from all filtered figures/edges (stable positions)
+  const { layoutNodes, layoutEdges } = useMemo(() => {
+    if (!isFullGraph) {
+      const local = layoutLocal(filteredFigures, filteredEdges, centerFigureId!, danceSlug);
+      return { layoutNodes: local.nodes, layoutEdges: local.edges };
     }
-    return { computedNodes: layoutFull(filteredFigures, danceSlug), computedEdges: buildEdges(filteredEdges) };
-  }, [filteredFigures, filteredEdges, centerFigureId, danceSlug]);
+    return {
+      layoutNodes: layoutFull(filteredFigures, filteredEdges, danceSlug),
+      layoutEdges: filteredEdges as MappedGraphEdge[],
+    };
+  }, [filteredFigures, filteredEdges, centerFigureId, danceSlug, isFullGraph]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(computedNodes);
-  const [flowEdges, setEdges, onEdgesChange] = useEdgesState(computedEdges);
+  // For full graph: compute connected node IDs for the hovered node
+  const connectedNodeIds = useMemo(() => {
+    if (!isFullGraph || !hoveredNodeId) return null;
+    const ids = new Set<string>([hoveredNodeId]);
+    for (const edge of layoutEdges) {
+      const src = (edge as MappedGraphEdge)._sourceNode ?? String(edge.sourceFigureId);
+      const tgt = (edge as MappedGraphEdge)._targetNode ?? String(edge.targetFigureId);
+      if (src === hoveredNodeId || tgt === hoveredNodeId) {
+        ids.add(src);
+        ids.add(tgt);
+      }
+    }
+    return ids;
+  }, [isFullGraph, hoveredNodeId, layoutEdges]);
 
-  useEffect(() => { setNodes(computedNodes); }, [computedNodes, setNodes]);
-  useEffect(() => { setEdges(computedEdges); }, [computedEdges, setEdges]);
+  // Apply dimming to nodes when hovering in full graph mode
+  const displayNodes = useMemo(() => {
+    if (!isFullGraph || !connectedNodeIds) return layoutNodes;
+    return layoutNodes.map((node) => ({
+      ...node,
+      style: {
+        ...node.style,
+        opacity: connectedNodeIds.has(node.id) ? 1 : 0.25,
+        transition: "opacity 0.15s ease",
+      },
+    }));
+  }, [layoutNodes, connectedNodeIds, isFullGraph]);
+
+  // For full graph: only show edges connected to hovered node; local graph shows all
+  const displayEdges = useMemo(() => {
+    if (!isFullGraph) {
+      return buildEdges(layoutEdges);
+    }
+    if (!hoveredNodeId) {
+      return [];
+    }
+    const hoverEdges = layoutEdges.filter((edge) => {
+      const src = (edge as MappedGraphEdge)._sourceNode ?? String(edge.sourceFigureId);
+      const tgt = (edge as MappedGraphEdge)._targetNode ?? String(edge.targetFigureId);
+      return src === hoveredNodeId || tgt === hoveredNodeId;
+    });
+    return buildEdges(hoverEdges, { isFullGraph: true });
+  }, [layoutEdges, hoveredNodeId, isFullGraph]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(displayNodes);
+  const [flowEdges, setEdges, onEdgesChange] = useEdgesState(displayEdges);
+
+  useEffect(() => { setNodes(displayNodes); }, [displayNodes, setNodes]);
+  useEffect(() => { setEdges(displayEdges); }, [displayEdges, setEdges]);
 
   return (
     <div className="h-[calc(100vh-200px)] min-h-[500px] rounded-lg border border-border overflow-hidden">
@@ -311,6 +371,8 @@ export function DanceGraph({ danceSlug, figures, edges, centerFigureId }: DanceG
         edges={flowEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.3 }}
@@ -347,6 +409,32 @@ export function DanceGraph({ danceSlug, figures, edges, centerFigureId }: DanceG
             </button>
           ))}
         </Panel>
+        {isFullGraph && (
+          <Panel
+            position="top-left"
+            className="rounded-md border border-border bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
+          >
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              Levels
+            </p>
+            <div className="space-y-1.5">
+              {LEVEL_LEGEND.map((item) => (
+                <div key={item.label} className="flex items-center gap-2 text-xs">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-foreground">{item.label}</span>
+                </div>
+              ))}
+            </div>
+            {!hoveredNodeId && (
+              <p className="text-[10px] text-muted-foreground mt-2 italic">
+                Hover a figure to see transitions
+              </p>
+            )}
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   );
