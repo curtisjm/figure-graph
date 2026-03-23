@@ -1,35 +1,24 @@
 # Figure Graph Next Features Plan
 
-Last updated: 2026-03-19
+Last updated: 2026-03-23
 
 ## Scope
 
 This plan captures the work that comes after the current baseline (schema/index hardening, route integrity checks, auth-scoped routine APIs, and docs sync).
 
-## Immediate Work: Dagre Graph Layout
+## Completed: Dagre Graph Layout + Edge-on-Demand (2026-03-23)
 
-### Goal
-Improve readability of full dance graphs by replacing the current row-based node placement with a directed-graph layout while keeping React Flow as the renderer.
-
-### Implementation Notes
-- Keep `@xyflow/react` as-is for rendering and interaction.
-- Add `@dagrejs/dagre` for layout computation only.
-- Update `layoutFull` in `src/components/graph/dance-graph.tsx` to:
-  - create a Dagre graph from visible figures + edges,
-  - set node dimensions and spacing,
-  - run Dagre layout,
-  - map Dagre coordinates back to React Flow node positions.
-- Preserve level coloring, toggles, minimap, controls, and node links.
-- Add a small level legend panel in full graph mode.
-
-### Acceptance Criteria
-- Full graph is materially more readable (fewer severe overlaps/crossings).
-- `fitView` still frames the graph correctly.
-- Local graph behavior remains unchanged.
+- Replaced row-based full graph layout with dagre hierarchical layout (TB).
+- Extracted layout logic to `src/components/graph/full-layout.ts` with unit tests.
+- Added direction-aware handles: Top/Bottom for full graph, Left/Right for local graph.
+- Level toggles now also filter edges by their level (not just figures).
+- Full graph uses edge-on-demand: edges hidden by default, revealed on node hover with connected-node highlighting and non-connected node dimming.
+- Added level legend panel in full graph mode with hover hint.
+- Local graph behavior unchanged.
 
 ---
 
-## Remaining Roadmap (Post-Dagre)
+## Remaining Roadmap
 
 ### 1) Dance Figure List Search and Filters
 
