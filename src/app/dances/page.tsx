@@ -12,6 +12,7 @@ import Link from "next/link";
 import { getDb } from "@/db";
 import { dances, figures } from "@/db/schema";
 import { count } from "drizzle-orm";
+import { sortDancesForBrowse } from "./dance-order";
 
 const DANCE_DESCRIPTIONS: Record<string, string> = {
   waltz: "The classic rise-and-fall dance in triple time",
@@ -32,6 +33,7 @@ export default async function DancesPage() {
     .groupBy(figures.danceId);
 
   const countMap = new Map(figureCounts.map((r) => [r.danceId, r.count]));
+  const orderedDances = sortDancesForBrowse(allDances);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
@@ -43,7 +45,7 @@ export default async function DancesPage() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allDances.map((dance) => (
+          {orderedDances.map((dance) => (
             <Link key={dance.id} href={`/dances/${dance.name}`}>
               <Card className="hover:border-muted-foreground/50 transition-colors cursor-pointer h-full">
                 <CardHeader>
