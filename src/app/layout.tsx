@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Link from "next/link";
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -21,35 +27,59 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <Providers>
-          <div className="min-h-screen flex flex-col">
-            <header className="border-b border-border px-6 py-4">
-              <nav className="max-w-7xl mx-auto flex items-center justify-between">
-                <Link href="/" className="text-xl font-bold tracking-tight">
-                  Figure Graph
-                </Link>
-                <div className="flex items-center gap-6">
-                  <Link
-                    href="/dances"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Dances
+    <ClerkProvider
+      appearance={{
+        variables: { colorPrimary: "#a1a1aa" },
+        elements: {
+          card: "bg-card border border-border",
+          headerTitle: "text-foreground",
+          headerSubtitle: "text-muted-foreground",
+          formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
+          footerActionLink: "text-primary hover:text-primary/90",
+        },
+      }}
+    >
+      <html lang="en" className="dark">
+        <body className={`${inter.variable} font-sans antialiased`}>
+          <Providers>
+            <div className="min-h-screen flex flex-col">
+              <header className="border-b border-border px-6 py-4">
+                <nav className="max-w-7xl mx-auto flex items-center justify-between">
+                  <Link href="/" className="text-xl font-bold tracking-tight">
+                    Figure Graph
                   </Link>
-                  <Link
-                    href="/routines"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Routines
-                  </Link>
-                </div>
-              </nav>
-            </header>
-            <main className="flex-1">{children}</main>
-          </div>
-        </Providers>
-      </body>
-    </html>
+                  <div className="flex items-center gap-6">
+                    <Link
+                      href="/dances"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Dances
+                    </Link>
+                    <Link
+                      href="/routines"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Routines
+                    </Link>
+                    <SignedOut>
+                      <Link
+                        href="/sign-in"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Sign in
+                      </Link>
+                    </SignedOut>
+                    <SignedIn>
+                      <UserButton />
+                    </SignedIn>
+                  </div>
+                </nav>
+              </header>
+              <main className="flex-1">{children}</main>
+            </div>
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
