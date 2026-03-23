@@ -7,6 +7,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -27,18 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      appearance={{
-        variables: { colorPrimary: "#a1a1aa" },
-        elements: {
-          card: "bg-card border border-border",
-          headerTitle: "text-foreground",
-          headerSubtitle: "text-muted-foreground",
-          formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
-          footerActionLink: "text-primary hover:text-primary/90",
-        },
-      }}
-    >
+    <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="en" className="dark">
         <body className={`${inter.variable} font-sans antialiased`}>
           <Providers>
