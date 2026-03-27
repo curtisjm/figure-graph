@@ -12,7 +12,7 @@ import Link from "next/link";
 import { getDb } from "@shared/db";
 import { dances, figures } from "@syllabus/schema";
 import { count } from "drizzle-orm";
-import { sortDancesForBrowse } from "./dance-order";
+import { sortDancesForBrowse } from "@syllabus/components/dance/dance-order";
 
 const DANCE_DESCRIPTIONS: Record<string, string> = {
   waltz: "The classic rise-and-fall dance in triple time",

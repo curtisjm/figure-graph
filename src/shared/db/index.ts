@@ -1,6 +1,10 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
-import * as schema from "./schema";
+import * as sharedSchema from "@shared/schema";
+import * as syllabusSchema from "@syllabus/schema";
+import * as routinesSchema from "@routines/schema";
+
+const schema = { ...sharedSchema, ...syllabusSchema, ...routinesSchema };
 
 let _db: NeonHttpDatabase<typeof schema> | null = null;
 
