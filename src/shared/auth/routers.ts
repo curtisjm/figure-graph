@@ -6,6 +6,7 @@ import { followRouter } from "@social/routers/follow";
 import { profileRouter } from "@social/routers/profile";
 import { postRouter } from "@social/routers/post";
 import { feedRouter } from "@social/routers/feed";
+import { commentRouter } from "@social/routers/comment";
 
 export const appRouter = router({
   dance: danceRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
   profile: profileRouter,
   post: postRouter,
   feed: feedRouter,
+  comment: commentRouter,
 });
 
 export type AppRouter = typeof appRouter;
