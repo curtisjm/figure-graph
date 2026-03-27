@@ -5,6 +5,7 @@ import { routineRouter } from "@routines/routers/routine";
 import { followRouter } from "@social/routers/follow";
 import { profileRouter } from "@social/routers/profile";
 import { postRouter } from "@social/routers/post";
+import { feedRouter } from "@social/routers/feed";
 
 export const appRouter = router({
   dance: danceRouter,
@@ -13,6 +14,7 @@ export const appRouter = router({
   follow: followRouter,
   profile: profileRouter,
   post: postRouter,
+  feed: feedRouter,
 });
 
 export type AppRouter = typeof appRouter;
