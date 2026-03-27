@@ -6,6 +6,7 @@ export default defineConfig({
     "./src/shared/db/enums.ts",
     "./src/domains/syllabus/schema.ts",
     "./src/domains/routines/schema.ts",
+    "./src/domains/social/schema.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",

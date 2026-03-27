@@ -3,8 +3,9 @@ import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
 import * as sharedSchema from "@shared/schema";
 import * as syllabusSchema from "@syllabus/schema";
 import * as routinesSchema from "@routines/schema";
+import * as socialSchema from "@/domains/social/schema";
 
-const schema = { ...sharedSchema, ...syllabusSchema, ...routinesSchema };
+const schema = { ...sharedSchema, ...syllabusSchema, ...routinesSchema, ...socialSchema };
 
 let _db: NeonHttpDatabase<typeof schema> | null = null;
 
