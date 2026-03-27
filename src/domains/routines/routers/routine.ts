@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { and, asc, eq, sql } from "drizzle-orm";
-import { protectedProcedure, router } from "../trpc";
-import { db } from "@/db";
-import { routines, routineEntries, figures } from "@/db/schema";
+import { protectedProcedure, router } from "../../shared/auth/trpc";
+import { db } from "../../shared/db";
+import { routines, routineEntries } from "../schema";
+import { figures } from "../../syllabus/schema";
 
 export const routineRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
