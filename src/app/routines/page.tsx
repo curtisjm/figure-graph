@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@shared/db";
 import { dances } from "@syllabus/schema";
-import { sortDancesForBrowse } from "@/app/dances/dance-order";
+import { sortDancesForBrowse } from "@syllabus/components/dance/dance-order";
 import {
   Card,
   CardHeader,
