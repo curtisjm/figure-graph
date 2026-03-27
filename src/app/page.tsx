@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@shared/ui/badge";
+import { Button } from "@shared/ui/button";
 
 export default function HomePage() {
   return (

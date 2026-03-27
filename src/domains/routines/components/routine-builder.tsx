@@ -2,11 +2,11 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { trpc } from "../../../shared/lib/trpc";
-import { Input } from "../../../shared/ui/input";
-import { Button } from "../../../shared/ui/button";
-import { Badge } from "../../../shared/ui/badge";
-import { Card } from "../../../shared/ui/card";
+import { trpc } from "@shared/lib/trpc";
+import { Input } from "@shared/ui/input";
+import { Button } from "@shared/ui/button";
+import { Badge } from "@shared/ui/badge";
+import { Card } from "@shared/ui/card";
 import { FigurePicker, type PickerFigure } from "./figure-picker";
 
 const LEVEL_ORDER = ["student_teacher", "associate", "licentiate", "fellow"] as const;

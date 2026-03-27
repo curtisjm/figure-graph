@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq, asc } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { getDb } from "@/db";
-import { dances, figures } from "@/db/schema";
-import { FigureListFilters } from "@/components/dance/figure-list-filters";
+import { Button } from "@shared/ui/button";
+import { Separator } from "@shared/ui/separator";
+import { getDb } from "@shared/db";
+import { dances, figures } from "@syllabus/schema";
+import { FigureListFilters } from "@syllabus/components/dance/figure-list-filters";
 
 export default async function DancePage({
   params,

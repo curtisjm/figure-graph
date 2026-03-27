@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "../db";
-import { users } from "../schema";
+import { getDb } from "@shared/db";
+import { users } from "@shared/schema";
 
 /**
  * Ensures a row exists in the users table for the given Clerk user ID.

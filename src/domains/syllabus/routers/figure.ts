@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { eq, or } from "drizzle-orm";
-import { publicProcedure, router } from "../../shared/auth/trpc";
-import { db } from "../../shared/db";
-import { figures, figureEdges } from "../schema";
+import { publicProcedure, router } from "@shared/auth/trpc";
+import { db } from "@shared/db";
+import { figures, figureEdges } from "@syllabus/schema";
 
 export const figureRouter = router({
   list: publicProcedure

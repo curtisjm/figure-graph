@@ -1,18 +1,18 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { and, eq, or } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@shared/ui/badge";
+import { Button } from "@shared/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { getDb } from "@/db";
-import { dances, figures, figureEdges } from "@/db/schema";
+} from "@shared/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
+import { Separator } from "@shared/ui/separator";
+import { getDb } from "@shared/db";
+import { dances, figures, figureEdges } from "@syllabus/schema";
 
 const LEVEL_COLORS: Record<string, string> = {
   student_teacher: "border-bronze text-bronze",

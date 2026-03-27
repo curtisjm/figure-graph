@@ -8,8 +8,8 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { levelEnum } from "../../shared/db/enums";
-import { users } from "../../shared/schema";
+import { levelEnum } from "@shared/db/enums";
+import { users } from "@shared/schema";
 
 export { levelEnum };
 

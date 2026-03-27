@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { trpc } from "../../../shared/lib/trpc";
+import { trpc } from "@shared/lib/trpc";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../../shared/ui/card";
-import { Badge } from "../../../shared/ui/badge";
+} from "@shared/ui/card";
+import { Badge } from "@shared/ui/badge";
 
 export function DanceRoutinesList({
   danceId,

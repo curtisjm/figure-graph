@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { getDb } from "@/db";
-import { dances } from "@/db/schema";
+import { getDb } from "@shared/db";
+import { dances } from "@syllabus/schema";
 import { sortDancesForBrowse } from "@/app/dances/dance-order";
 import {
   Card,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 
 export default async function RoutinesPage() {
   const db = getDb();

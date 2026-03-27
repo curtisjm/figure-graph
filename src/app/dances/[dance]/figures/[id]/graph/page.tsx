@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { and, eq, inArray, or } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
-import { getDb } from "@/db";
-import { dances, figureEdges, figures } from "@/db/schema";
-import { DanceGraph } from "@/components/graph/dance-graph";
+import { Button } from "@shared/ui/button";
+import { getDb } from "@shared/db";
+import { dances, figureEdges, figures } from "@syllabus/schema";
+import { DanceGraph } from "@syllabus/components/graph/dance-graph";
 
 export default async function FigureGraphPage({
   params,

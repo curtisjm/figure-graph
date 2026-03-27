@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { dances } from "@/db/schema";
-import { Button } from "@/components/ui/button";
-import { DanceRoutinesList } from "@/components/routine/dance-routines-list";
+import { getDb } from "@shared/db";
+import { dances } from "@syllabus/schema";
+import { Button } from "@shared/ui/button";
+import { DanceRoutinesList } from "@routines/components/dance-routines-list";
 
 export default async function DanceRoutinesPage({
   params,

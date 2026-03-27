@@ -1,7 +1,7 @@
 import { router } from "./trpc";
-import { danceRouter } from "../../domains/syllabus/routers/dance";
-import { figureRouter } from "../../domains/syllabus/routers/figure";
-import { routineRouter } from "../../domains/routines/routers/routine";
+import { danceRouter } from "@syllabus/routers/dance";
+import { figureRouter } from "@syllabus/routers/figure";
+import { routineRouter } from "@routines/routers/routine";
 
 export const appRouter = router({
   dance: danceRouter,

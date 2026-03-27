@@ -6,11 +6,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@shared/ui/card";
+import { Badge } from "@shared/ui/badge";
 import Link from "next/link";
-import { getDb } from "@/db";
-import { dances, figures } from "@/db/schema";
+import { getDb } from "@shared/db";
+import { dances, figures } from "@syllabus/schema";
 import { count } from "drizzle-orm";
 import { sortDancesForBrowse } from "./dance-order";
 

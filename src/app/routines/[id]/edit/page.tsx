@@ -2,8 +2,8 @@
 
 import { use } from "react";
 import { notFound } from "next/navigation";
-import { trpc } from "@/lib/trpc";
-import { RoutineBuilder } from "@/components/routine/routine-builder";
+import { trpc } from "@shared/lib/trpc";
+import { RoutineBuilder } from "@routines/components/routine-builder";
 
 export default function EditRoutinePage({
   params,

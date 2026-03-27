@@ -7,8 +7,8 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
-import { Providers } from "@/components/providers";
-import { clerkAppearance } from "@/lib/clerk-appearance";
+import { Providers } from "@shared/components/providers";
+import { clerkAppearance } from "@shared/lib/clerk-appearance";
 import "./globals.css";
 
 const inter = Inter({

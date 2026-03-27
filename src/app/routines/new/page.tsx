@@ -2,16 +2,16 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { trpc } from "@/lib/trpc";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { trpc } from "@shared/lib/trpc";
+import { Input } from "@shared/ui/input";
+import { Button } from "@shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 
 export default function NewRoutinePage() {
   return (

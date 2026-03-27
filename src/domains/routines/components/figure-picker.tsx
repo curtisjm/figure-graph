@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Input } from "../../../shared/ui/input";
-import { Badge } from "../../../shared/ui/badge";
+import { Input } from "@shared/ui/input";
+import { Badge } from "@shared/ui/badge";
 
 const LEVEL_ORDER = ["student_teacher", "associate", "licentiate", "fellow"] as const;
 const LEVEL_LABELS: Record<string, string> = {

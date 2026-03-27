@@ -8,11 +8,11 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { wallSegmentEnum } from "../../shared/db/enums";
-import { users } from "../../shared/schema";
-import { dances, figures } from "../syllabus/schema";
+import { wallSegmentEnum } from "@shared/db/enums";
+import { users } from "@shared/schema";
+import { dances, figures } from "@syllabus/schema";
 
-export { wallSegmentEnum } from "../../shared/db/enums";
+export { wallSegmentEnum } from "@shared/db/enums";
 
 export const routines = pgTable(
   "routines",
