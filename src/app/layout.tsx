@@ -46,6 +46,12 @@ export default function RootLayout({
                       Dances
                     </Link>
                     <Link
+                      href="/feed"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Feed
+                    </Link>
+                    <Link
                       href="/routines"
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
