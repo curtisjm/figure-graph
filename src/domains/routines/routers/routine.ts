@@ -98,6 +98,30 @@ export const routineRouter = router({
       return routine ?? null;
     }),
 
+  togglePublished: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [routine] = await db
+        .select({ id: routines.id, isPublished: routines.isPublished })
+        .from(routines)
+        .where(
+          and(eq(routines.id, input.id), eq(routines.userId, ctx.userId))
+        );
+
+      if (!routine) return null;
+
+      const [updated] = await db
+        .update(routines)
+        .set({
+          isPublished: !routine.isPublished,
+          updatedAt: new Date(),
+        })
+        .where(eq(routines.id, input.id))
+        .returning();
+
+      return updated;
+    }),
+
   addEntry: protectedProcedure
     .input(
       z.object({
