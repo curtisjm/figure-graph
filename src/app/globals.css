@@ -1,5 +1,6 @@
 @layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "@clerk/ui/themes/shadcn.css";
 
 @custom-variant dark (&:is(.dark *));
