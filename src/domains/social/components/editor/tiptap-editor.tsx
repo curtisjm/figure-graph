@@ -1,0 +1,59 @@
+"use client";
+
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import LinkExtension from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import ImageExtension from "@tiptap/extension-image";
+import { Toolbar } from "./toolbar";
+
+interface TiptapEditorProps {
+  content: string;
+  onChange: (html: string) => void;
+  placeholder?: string;
+}
+
+export function TiptapEditor({
+  content,
+  onChange,
+  placeholder = "Write something...",
+}: TiptapEditorProps) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+      }),
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "text-blue-400 underline",
+        },
+      }),
+      Placeholder.configure({
+        placeholder,
+      }),
+      ImageExtension.configure({
+        HTMLAttributes: {
+          class: "rounded-lg max-w-full",
+        },
+      }),
+    ],
+    content,
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-invert prose-sm max-w-none min-h-[300px] px-4 py-3 focus:outline-none",
+      },
+    },
+  });
+
+  return (
+    <div className="border border-input rounded-md overflow-hidden">
+      <Toolbar editor={editor} />
+      <EditorContent editor={editor} />
+    </div>
+  );
+}
