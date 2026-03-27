@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, eq, desc, isNull, isNotNull } from "drizzle-orm";
+import { and, eq, desc, isNull } from "drizzle-orm";
 import { protectedProcedure, publicProcedure, router } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { users } from "@shared/schema";

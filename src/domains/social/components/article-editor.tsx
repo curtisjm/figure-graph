@@ -39,7 +39,7 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
   });
 
   // Auto-save for existing drafts (debounced)
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const autoSave = useCallback(() => {
     if (!existingPost) return;
     clearTimeout(saveTimeoutRef.current);

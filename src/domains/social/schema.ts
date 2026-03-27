@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgEnum, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { index, integer, pgEnum, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "@shared/schema";
 
 export const followStatusEnum = pgEnum("follow_status", ["active", "pending"]);
