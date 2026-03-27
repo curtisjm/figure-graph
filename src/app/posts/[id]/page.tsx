@@ -4,6 +4,7 @@ import { getDb } from "@shared/db";
 import { users } from "@shared/schema";
 import { posts } from "@social/schema";
 import { ArticleRenderer } from "@/domains/social/components/article-renderer";
+import { CommentThread } from "@/domains/social/components/comment-thread";
 import { Badge } from "@shared/ui/badge";
 import Link from "next/link";
 
@@ -59,6 +60,10 @@ export default async function PostPage({
       {post.title && <h1 className="text-3xl font-bold mb-6">{post.title}</h1>}
 
       {post.body && <ArticleRenderer html={post.body} />}
+
+      <div className="mt-8">
+        <CommentThread postId={post.id} />
+      </div>
     </div>
   );
 }

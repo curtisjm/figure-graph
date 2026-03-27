@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@shared/ui/card";
 import { Badge } from "@shared/ui/badge";
+import { InteractionBar } from "./interaction-bar";
 
 interface PostCardProps {
   post: {
@@ -70,6 +71,7 @@ export function PostCard({ post }: PostCardProps) {
             </p>
           )}
         </Link>
+        <InteractionBar postId={post.id} userId={null} />
       </CardContent>
     </Card>
   );
