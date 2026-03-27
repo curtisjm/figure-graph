@@ -8,6 +8,7 @@ import { postRouter } from "@social/routers/post";
 import { feedRouter } from "@social/routers/feed";
 import { commentRouter } from "@social/routers/comment";
 import { likeRouter } from "@social/routers/like";
+import { saveRouter } from "@social/routers/save";
 
 export const appRouter = router({
   dance: danceRouter,
@@ -19,6 +20,7 @@ export const appRouter = router({
   feed: feedRouter,
   comment: commentRouter,
   like: likeRouter,
+  save: saveRouter,
 });
 
 export type AppRouter = typeof appRouter;
