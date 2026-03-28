@@ -4,6 +4,7 @@ import { protectedProcedure, publicProcedure, router } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { users } from "@shared/schema";
 import { posts, follows } from "@social/schema";
+import { memberships } from "@orgs/schema";
 
 const FEED_PAGE_SIZE = 20;
 
@@ -34,9 +35,11 @@ export const feedRouter = router({
 
       const followedIds = followedUsers.map((f) => f.followingId);
 
-      if (followedIds.length === 0) {
-        return { posts: [], nextCursor: null };
-      }
+      // Get user's org IDs for org-only visibility
+      const userOrgIds = db
+        .select({ orgId: memberships.orgId })
+        .from(memberships)
+        .where(eq(memberships.userId, ctx.userId));
 
       const cursorCondition = input.cursor
         ? or(
@@ -67,11 +70,21 @@ export const feedRouter = router({
         .leftJoin(users, eq(posts.authorId, users.id))
         .where(
           and(
-            inArray(posts.authorId, followedIds),
             isNotNull(posts.publishedAt),
             or(
-              eq(posts.visibility, "public"),
-              eq(posts.visibility, "followers")
+              // Posts from followed users (public or followers-only)
+              and(
+                followedIds.length > 0 ? inArray(posts.authorId, followedIds) : undefined,
+                or(
+                  eq(posts.visibility, "public"),
+                  eq(posts.visibility, "followers")
+                )
+              ),
+              // Org-only posts where viewer is a member
+              and(
+                eq(posts.visibility, "organization"),
+                inArray(posts.visibilityOrgId, userOrgIds)
+              )
             ),
             cursorCondition
           )
