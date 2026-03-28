@@ -1,5 +1,5 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { competitionLevelEnum } from "./db/enums";
+import { boolean, index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { competitionLevelEnum, notificationTypeEnum } from "./db/enums";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -13,3 +13,28 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    type: notificationTypeEnum("type").notNull(),
+    actorId: text("actor_id").references(() => users.id),
+    postId: integer("post_id"),
+    commentId: integer("comment_id"),
+    orgId: integer("org_id"),
+    conversationId: integer("conversation_id"),
+    read: boolean("read").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userUnreadIdx: index("notifications_user_unread_idx").on(
+      table.userId,
+      table.read,
+      table.createdAt
+    ),
+  })
+);

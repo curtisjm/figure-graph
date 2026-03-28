@@ -38,3 +38,17 @@ export const joinRequestStatusEnum = pgEnum("join_request_status", [
   "approved",
   "rejected",
 ]);
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "like",
+  "comment",
+  "reply",
+  "follow",
+  "follow_request",
+  "follow_accepted",
+  "message",
+  "org_invite",
+  "join_request",
+  "join_approved",
+  "org_post",
+]);
