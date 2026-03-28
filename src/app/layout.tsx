@@ -57,6 +57,12 @@ export default function RootLayout({
                     >
                       Routines
                     </Link>
+                    <Link
+                      href="/orgs"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Organizations
+                    </Link>
                     <SignedOut>
                       <Link
                         href="/sign-in"
