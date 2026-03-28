@@ -64,6 +64,14 @@ export default function RootLayout({
                     >
                       Organizations
                     </Link>
+                    <SignedIn>
+                      <Link
+                        href="/messages"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Messages
+                      </Link>
+                    </SignedIn>
                     <SignedOut>
                       <Link
                         href="/sign-in"
