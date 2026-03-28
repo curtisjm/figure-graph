@@ -23,7 +23,8 @@
       "@shared/*": ["./src/shared/*"],
       "@syllabus/*": ["./src/domains/syllabus/*"],
       "@routines/*": ["./src/domains/routines/*"],
-      "@social/*": ["./src/domains/social/*"]
+      "@social/*": ["./src/domains/social/*"],
+      "@orgs/*": ["./src/domains/orgs/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
