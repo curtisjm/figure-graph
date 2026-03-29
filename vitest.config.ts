@@ -4,6 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     globals: true,
+    include: ["tests/**/*.test.ts"],
     globalSetup: [
       "./tests/setup/global-setup.ts",
       "./tests/setup/global-teardown.ts",
@@ -13,6 +14,7 @@ export default defineConfig({
     hookTimeout: 15_000,
     pool: "forks",
     forks: { singleFork: true },
+    fileParallelism: false,
   },
   resolve: {
     alias: {
