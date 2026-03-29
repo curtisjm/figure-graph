@@ -107,8 +107,8 @@ export const messageRouter = router({
 
       let nextCursor: number | undefined;
       if (items.length > input.limit) {
-        const next = items.pop();
-        nextCursor = next!.id;
+        items.pop();
+        nextCursor = items[items.length - 1]!.id;
       }
 
       // Reverse for chronological order
