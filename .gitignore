@@ -30,3 +30,6 @@ DESIGN.md
 
 # Data pipeline working files
 data/raw/
+
+# Test database
+.pg-test/
