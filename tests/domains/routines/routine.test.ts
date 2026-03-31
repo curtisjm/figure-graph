@@ -100,6 +100,30 @@ describe("routine router", () => {
       const afterRemove = await caller.routine.get({ id: routine.id });
       expect(afterRemove!.entries).toHaveLength(1);
     });
+
+    it("inserts before an entry in the middle of the routine", async () => {
+      const fig1 = await createFigure(danceId, { name: "Natural Turn" });
+      const fig2 = await createFigure(danceId, { name: "Reverse Turn" });
+      const fig3 = await createFigure(danceId, { name: "Whisk" });
+
+      const caller = createCaller(userId);
+      const routine = await caller.routine.create({ danceId, name: "Test" });
+
+      // Build a 2-entry routine: [fig1@0, fig2@1]
+      await caller.routine.addEntry({ routineId: routine.id, figureId: fig1.id, position: 0 });
+      await caller.routine.addEntry({ routineId: routine.id, figureId: fig2.id, position: 1 });
+
+      // Insert fig3 at position 1 — should shift fig2 to position 2
+      await caller.routine.addEntry({ routineId: routine.id, figureId: fig3.id, position: 1 });
+
+      const loaded = await caller.routine.get({ id: routine.id });
+      expect(loaded!.entries).toHaveLength(3);
+
+      const sorted = loaded!.entries.sort((a, b) => a.position - b.position);
+      expect(sorted[0].figureId).toBe(fig1.id);  // position 0 — unchanged
+      expect(sorted[1].figureId).toBe(fig3.id);  // position 1 — newly inserted
+      expect(sorted[2].figureId).toBe(fig2.id);  // position 2 — shifted from 1
+    });
   });
 
   describe("togglePublished", () => {

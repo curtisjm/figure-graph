@@ -143,16 +143,21 @@ export const routineRouter = router({
         );
       if (!routine) return null;
 
-      // Shift existing entries at or after this position
-      await db
-        .update(routineEntries)
-        .set({ position: sql`${routineEntries.position} + 1` })
-        .where(
-          and(
-            eq(routineEntries.routineId, input.routineId),
-            sql`${routineEntries.position} >= ${input.position}`
-          )
-        );
+      // Shift existing entries at or after this position.
+      // Two-step via negative values to avoid unique constraint violation
+      // on (routine_id, position).
+      await db.execute(sql`
+        UPDATE routine_entries
+        SET position = -(position + 1)
+        WHERE routine_id = ${input.routineId}
+          AND position >= ${input.position}
+      `);
+      await db.execute(sql`
+        UPDATE routine_entries
+        SET position = -position
+        WHERE routine_id = ${input.routineId}
+          AND position < 0
+      `);
 
       const [entry] = await db
         .insert(routineEntries)
@@ -203,16 +208,21 @@ export const routineRouter = router({
         .delete(routineEntries)
         .where(eq(routineEntries.id, input.entryId));
 
-      // Shift down entries after the removed one
-      await db
-        .update(routineEntries)
-        .set({ position: sql`${routineEntries.position} - 1` })
-        .where(
-          and(
-            eq(routineEntries.routineId, input.routineId),
-            sql`${routineEntries.position} > ${entry.position}`
-          )
-        );
+      // Shift down entries after the removed one.
+      // Two-step via negative values to avoid unique constraint violation
+      // on (routine_id, position).
+      await db.execute(sql`
+        UPDATE routine_entries
+        SET position = -(position - 1)
+        WHERE routine_id = ${input.routineId}
+          AND position > ${entry.position}
+      `);
+      await db.execute(sql`
+        UPDATE routine_entries
+        SET position = -position
+        WHERE routine_id = ${input.routineId}
+          AND position < 0
+      `);
 
       await db
         .update(routines)
