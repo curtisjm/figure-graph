@@ -1,8 +1,8 @@
-# Figure Graph — Project Status
+# World of Floorcraft — Project Status
 
 ## Overview
 
-Figure Graph is a Next.js application for visualizing the ISTD (Imperial Society of Teachers of Dancing) ballroom dance syllabus as an interactive directed graph. Users can browse figures for each dance, explore precede/follow relationships between figures, and traverse the graph visually. The app is a personal project being built iteratively with AI agents.
+World of Floorcraft is a Next.js application for visualizing the ISTD (Imperial Society of Teachers of Dancing) ballroom dance syllabus as an interactive directed graph. Users can browse figures for each dance, explore precede/follow relationships between figures, and traverse the graph visually. The app is a personal project being built iteratively with AI agents.
 
 ## Tech Stack
 

@@ -6,7 +6,7 @@ const PG_DIR = path.resolve(process.cwd(), ".pg-test");
 const PG_DATA = path.join(PG_DIR, "data");
 const PG_LOG = path.join(PG_DIR, "postgres.log");
 const PG_PORT = "5433";
-const DB_NAME = "figuregraph_test";
+const DB_NAME = "floorcraft_test";
 
 function pgIsRunning(): boolean {
   try {

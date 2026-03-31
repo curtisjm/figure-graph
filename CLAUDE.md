@@ -1,4 +1,4 @@
-# Figure Graph
+# World of Floorcraft
 
 Ballroom dance figure graph app with social platform features. Next.js frontend, tRPC v11 API, Drizzle ORM, Neon Postgres (production), Clerk auth, Ably realtime messaging.
 
@@ -43,7 +43,7 @@ nix develop --command bash -c "pnpm vitest run tests/domains/orgs/org.test.ts"
 
 ### How the Test Infrastructure Works
 
-1. **Global setup** (`tests/setup/global-setup.ts`): Starts a temporary PostgreSQL instance on port 5433 in `.pg-test/`, creates the `figuregraph_test` database, and pushes the schema via `drizzle-kit push`.
+1. **Global setup** (`tests/setup/global-setup.ts`): Starts a temporary PostgreSQL instance on port 5433 in `.pg-test/`, creates the `floorcraft_test` database, and pushes the schema via `drizzle-kit push`.
 
 2. **Global teardown** (`tests/setup/global-teardown.ts`): Stops the temporary PostgreSQL instance.
 

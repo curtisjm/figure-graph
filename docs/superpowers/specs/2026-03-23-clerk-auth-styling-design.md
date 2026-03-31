@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make Clerk's sign-in and sign-up screens feel native to Figure Graph by aligning the auth card, inputs, buttons, dividers, footer actions, and provider icons with the project's existing dark theme and shadcn-style component tokens.
+Make Clerk's sign-in and sign-up screens feel native to World of Floorcraft by aligning the auth card, inputs, buttons, dividers, footer actions, and provider icons with the project's existing dark theme and shadcn-style component tokens.
 
 ## Problem Summary
 
@@ -10,7 +10,7 @@ The current Clerk setup uses the `shadcn` base theme globally in `src/app/layout
 
 - Social provider buttons do not consistently match the app's dark card styling.
 - Some provider icons are too dark against the current button surfaces, especially on Apple and GitHub buttons.
-- Clerk's footer/action strip and divider treatment still feel like a third-party widget instead of part of Figure Graph.
+- Clerk's footer/action strip and divider treatment still feel like a third-party widget instead of part of World of Floorcraft.
 - The current setup depends too heavily on implicit theme token inheritance, which makes the auth UI fragile when Clerk's defaults differ from the app's intent.
 
 ## External References
@@ -156,7 +156,7 @@ Check:
 - Apple, GitHub, and Google buttons are all readable.
 - Primary button matches the app's button styling.
 - Input field borders, placeholder text, and focus state are readable.
-- Footer and divider colors feel native to Figure Graph.
+- Footer and divider colors feel native to World of Floorcraft.
 - Sign-in and sign-up pages remain centered and usable on desktop and mobile.
 
 ## Out of Scope

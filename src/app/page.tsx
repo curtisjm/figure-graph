@@ -27,7 +27,7 @@ export default function HomePage() {
               Gold
             </Badge>
           </div>
-          <h1 className="text-5xl font-bold tracking-tight">Figure Graph</h1>
+          <h1 className="text-5xl font-bold tracking-tight">World of Floorcraft</h1>
           <p className="text-xl text-muted-foreground">
             Explore the ISTD ballroom dance syllabus as an interactive graph.
             Browse figures, discover transitions, and build routines.

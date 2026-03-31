@@ -1,5 +1,5 @@
 {
-  description = "Figure Graph - Ballroom dance syllabus visualization";
+  description = "World of Floorcraft - Ballroom dance syllabus visualization";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -33,7 +33,7 @@
           ];
 
           shellHook = ''
-            echo "figure-graph dev environment loaded"
+            echo "world-of-floorcraft dev environment loaded"
           '';
         };
       });

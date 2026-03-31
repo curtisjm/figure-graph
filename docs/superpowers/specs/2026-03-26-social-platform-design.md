@@ -2,13 +2,13 @@
 
 **Date:** 2026-03-26
 **Status:** Approved
-**Scope:** Social networking features for the Figure Graph ballroom dance platform
+**Scope:** Social networking features for the World of Floorcraft ballroom dance platform
 
 ---
 
 ## Overview
 
-Extend Figure Graph from a syllabus visualization tool into a social platform for the ballroom dance community. Users can share routines, write technique articles, interact with posts, join organizations, and communicate via real-time messaging.
+Extend World of Floorcraft from a syllabus visualization tool into a social platform for the ballroom dance community. Users can share routines, write technique articles, interact with posts, join organizations, and communicate via real-time messaging.
 
 This spec covers six major subsystems built across seven implementation phases (Phase 0–6). The competition management system (organization-hosted judging, scheduling, registration) is explicitly out of scope but the organization model is designed to be extensible toward it.
 

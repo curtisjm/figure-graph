@@ -1,4 +1,4 @@
-# Figure Graph
+# World of Floorcraft
 
 A social platform for the ballroom dance community built around the ISTD syllabus. Browse figures, explore transitions as interactive graphs, build competition routines, share technique articles, and connect with dancers and teams.
 

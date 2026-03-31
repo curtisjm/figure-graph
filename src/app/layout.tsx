@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Figure Graph",
+  title: "World of Floorcraft",
   description:
     "Interactive visualization of the ISTD ballroom dance syllabus",
 };
@@ -37,7 +37,7 @@ export default function RootLayout({
               <header className="border-b border-border px-6 py-4">
                 <nav className="max-w-7xl mx-auto flex items-center justify-between">
                   <Link href="/" className="text-xl font-bold tracking-tight">
-                    Figure Graph
+                    World of Floorcraft
                   </Link>
                   <div className="flex items-center gap-6">
                     <Link

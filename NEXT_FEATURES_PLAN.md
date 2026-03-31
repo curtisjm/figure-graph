@@ -1,4 +1,4 @@
-# Figure Graph Next Features Plan
+# World of Floorcraft Next Features Plan
 
 Last updated: 2026-03-23
 

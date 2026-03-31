@@ -37,7 +37,7 @@ nix develop --command bash -c "pnpm test"
 ## What Happens When You Run Tests
 
 1. A temporary Postgres starts on **port 5433** with data stored in `.pg-test/` (gitignored).
-2. A `figuregraph_test` database is created and the full Drizzle schema is pushed to it.
+2. A `floorcraft_test` database is created and the full Drizzle schema is pushed to it.
 3. Tests run sequentially — each file truncates all tables in `beforeEach` so every test starts with a clean database.
 4. Postgres is stopped automatically when the test run finishes.
 
@@ -122,7 +122,7 @@ All factories accept an `overrides` object to set specific fields. They return t
 While tests are running (or if Postgres is still up from a previous run), you can connect:
 
 ```bash
-psql "postgresql://$USER@localhost:5433/figuregraph_test?host=$(pwd)/.pg-test"
+psql "postgresql://$USER@localhost:5433/floorcraft_test?host=$(pwd)/.pg-test"
 ```
 
 To manually start/stop the test Postgres:
