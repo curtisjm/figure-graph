@@ -16,6 +16,7 @@ import {
 } from "@shared/ui/select";
 import { JoinRequestList } from "@orgs/components/join-request-list";
 import { InviteManager } from "@orgs/components/invite-manager";
+import { AdminManager } from "@orgs/components/admin-manager";
 
 function TransferOwnership({ orgId, orgSlug }: { orgId: number; orgSlug: string }) {
   const [selectedAdmin, setSelectedAdmin] = useState<string>("");
@@ -228,6 +229,16 @@ export default function OrgSettingsPage() {
           </section>
         </>
       )}
+
+      {/* Manage Admins */}
+      <Separator className="my-6" />
+      <section>
+        <h2 className="text-lg font-semibold mb-4">Manage Admins</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Promote members to admin or revoke admin privileges.
+        </p>
+        <AdminManager orgId={org.id} />
+      </section>
 
       {/* Danger Zone (owner only) */}
       {isOwner && (
