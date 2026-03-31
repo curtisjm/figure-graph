@@ -3,6 +3,7 @@ import { eq, and, lt, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
+import { users } from "@shared/schema";
 import { conversations, conversationMembers, messages } from "@messaging/schema";
 import { publishToConversation } from "@messaging/lib/ably-server";
 import { createNotification } from "@social/lib/notify";
@@ -43,8 +44,23 @@ export const messageRouter = router({
         .set({ updatedAt: new Date() })
         .where(eq(conversations.id, input.conversationId));
 
-      // Publish to Ably
-      await publishToConversation(input.conversationId, "message", message).catch(() => {
+      // Look up sender info for real-time payload
+      const senderRow = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(users)
+        .where(eq(users.id, ctx.userId))
+        .then((rows) => rows[0] ?? null);
+
+      // Publish to Ably with sender info
+      await publishToConversation(input.conversationId, "message", {
+        ...message,
+        sender: senderRow,
+      }).catch(() => {
         // Non-fatal: Ably publish failure should not break the mutation
       });
 
@@ -98,21 +114,34 @@ export const messageRouter = router({
         conditions.push(lt(messages.id, input.cursor));
       }
 
-      const items = await db
-        .select()
+      const rows = await db
+        .select({
+          id: messages.id,
+          conversationId: messages.conversationId,
+          senderId: messages.senderId,
+          body: messages.body,
+          createdAt: messages.createdAt,
+          sender: {
+            id: users.id,
+            username: users.username,
+            displayName: users.displayName,
+            avatarUrl: users.avatarUrl,
+          },
+        })
         .from(messages)
+        .innerJoin(users, eq(messages.senderId, users.id))
         .where(and(...conditions))
         .orderBy(desc(messages.id))
         .limit(input.limit + 1);
 
       let nextCursor: number | undefined;
-      if (items.length > input.limit) {
-        items.pop();
-        nextCursor = items[items.length - 1]!.id;
+      if (rows.length > input.limit) {
+        rows.pop();
+        nextCursor = rows[rows.length - 1]!.id;
       }
 
       // Reverse for chronological order
-      const chronological = items.reverse();
+      const chronological = rows.reverse();
 
       return { items: chronological, nextCursor };
     }),

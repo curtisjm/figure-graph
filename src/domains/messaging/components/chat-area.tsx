@@ -16,12 +16,20 @@ interface ChatAreaProps {
   conversationId: number;
 }
 
+interface SenderInfo {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+}
+
 interface FlatMessage {
   id: number;
   body: string;
   createdAt: string;
   conversationId: number;
   senderId: string;
+  sender: SenderInfo | null;
 }
 
 export function ChatArea({ conversationId }: ChatAreaProps) {
@@ -49,10 +57,11 @@ export function ChatArea({ conversationId }: ChatAreaProps) {
       body: string;
       createdAt: string;
       senderId: string;
+      sender?: SenderInfo | null;
     };
     setRealtimeMessages((prev) => [
       ...prev,
-      { ...payload, conversationId },
+      { ...payload, conversationId, sender: payload.sender ?? null },
     ]);
   });
 
@@ -81,6 +90,7 @@ export function ChatArea({ conversationId }: ChatAreaProps) {
         : (item.createdAt as Date).toISOString(),
     conversationId: item.conversationId,
     senderId: item.senderId,
+    sender: item.sender ?? null,
   }));
 
   const allMessages = [...dbMessages, ...realtimeMessages];
@@ -112,9 +122,9 @@ export function ChatArea({ conversationId }: ChatAreaProps) {
               message={{ body: m.body, createdAt: m.createdAt }}
               sender={{
                 id: m.senderId,
-                displayName: null,
-                username: m.senderId,
-                avatarUrl: null,
+                displayName: m.sender?.displayName ?? null,
+                username: m.sender?.username ?? m.senderId,
+                avatarUrl: m.sender?.avatarUrl ?? null,
               }}
               isOwnMessage={m.senderId === userId}
             />
@@ -125,7 +135,16 @@ export function ChatArea({ conversationId }: ChatAreaProps) {
 
       <TypingIndicator
         typingUsers={typingUsers}
-        userNames={new Map<string, string>()}
+        userNames={
+          new Map(
+            deduped
+              .filter((m) => m.sender)
+              .map((m) => [
+                m.senderId,
+                m.sender!.displayName ?? m.sender!.username ?? m.senderId,
+              ])
+          )
+        }
         currentUserId={userId ?? ""}
       />
 
