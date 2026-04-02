@@ -106,6 +106,10 @@
   }
 }
 
+.tiptap.ProseMirror {
+  min-height: 70vh;
+}
+
 /* ── Clerk component overrides ─────────────────────────────────── */
 @layer clerk {
   /* Card container — match site card bg with visible border */
