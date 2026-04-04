@@ -23,6 +23,12 @@ import { scheduleRouter } from "@competitions/routers/schedule";
 import { eventRouter } from "@competitions/routers/event";
 import { staffRouter } from "@competitions/routers/staff";
 import { judgeRouter } from "@competitions/routers/judge";
+import { registrationRouter } from "@competitions/routers/registration";
+import { entryRouter } from "@competitions/routers/entry";
+import { paymentRouter } from "@competitions/routers/payment";
+import { numberRouter } from "@competitions/routers/number";
+import { tbaRouter } from "@competitions/routers/tba";
+import { teamMatchRouter } from "@competitions/routers/team-match";
 
 export const appRouter = router({
   dance: danceRouter,
@@ -49,6 +55,12 @@ export const appRouter = router({
   event: eventRouter,
   staff: staffRouter,
   judge: judgeRouter,
+  registration: registrationRouter,
+  entry: entryRouter,
+  payment: paymentRouter,
+  number: numberRouter,
+  tba: tbaRouter,
+  teamMatch: teamMatchRouter,
 });
 
 export type AppRouter = typeof appRouter;
