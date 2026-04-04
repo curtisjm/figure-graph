@@ -35,6 +35,8 @@ import { scheduleEstimationRouter } from "@competitions/routers/schedule-estimat
 import { statsRouter } from "@competitions/routers/stats";
 import { awardsRouter } from "@competitions/routers/awards";
 import { scoringRouter } from "@competitions/routers/scoring";
+import { judgeSessionRouter } from "@competitions/routers/judge-session";
+import { scrutineerRouter } from "@competitions/routers/scrutineer";
 
 export const appRouter = router({
   dance: danceRouter,
@@ -73,6 +75,8 @@ export const appRouter = router({
   stats: statsRouter,
   awards: awardsRouter,
   scoring: scoringRouter,
+  judgeSession: judgeSessionRouter,
+  scrutineer: scrutineerRouter,
 });
 
 export type AppRouter = typeof appRouter;
