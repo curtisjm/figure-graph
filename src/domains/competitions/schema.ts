@@ -30,6 +30,8 @@ import {
   roundTypeEnum,
   markStatusEnum,
   resultStatusEnum,
+  judgeSessionStatusEnum,
+  markCorrectionSourceEnum,
 } from "@shared/db/enums";
 
 // ── Competitions ────────────────────────────────────────────────────
@@ -638,3 +640,77 @@ export const roundResultsMeta = pgTable("round_results_meta", {
   reviewedAt: timestamp("reviewed_at"),
   publishedAt: timestamp("published_at"),
 });
+
+// ── Judge Sessions (Phase 5) ────────────────────────────────────────
+
+export const judgeSessions = pgTable(
+  "judge_sessions",
+  {
+    id: serial("id").primaryKey(),
+    competitionId: integer("competition_id")
+      .references(() => competitions.id, { onDelete: "cascade" })
+      .notNull(),
+    judgeId: integer("judge_id")
+      .references(() => judges.id)
+      .notNull(),
+    status: judgeSessionStatusEnum("status").notNull().default("active"),
+    tokenHash: text("token_hash").notNull(),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    endedAt: timestamp("ended_at"),
+  },
+  (table) => [
+    uniqueIndex("judge_sessions_active_idx")
+      .on(table.competitionId, table.judgeId)
+      .where(sql`status = 'active'`),
+  ],
+);
+
+// ── Active Rounds (Phase 5) ─────────────────────────────────────────
+
+export const activeRounds = pgTable(
+  "active_rounds",
+  {
+    id: serial("id").primaryKey(),
+    competitionId: integer("competition_id")
+      .references(() => competitions.id, { onDelete: "cascade" })
+      .notNull(),
+    roundId: integer("round_id")
+      .references(() => rounds.id)
+      .notNull(),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    endedAt: timestamp("ended_at"),
+  },
+  (table) => [
+    uniqueIndex("active_rounds_comp_idx")
+      .on(table.competitionId)
+      .where(sql`ended_at IS NULL`),
+  ],
+);
+
+// ── Mark Corrections (Phase 5) ──────────────────────────────────────
+
+export const markCorrections = pgTable(
+  "mark_corrections",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    judgeId: integer("judge_id")
+      .references(() => judges.id)
+      .notNull(),
+    entryId: integer("entry_id")
+      .references(() => entries.id)
+      .notNull(),
+    danceName: text("dance_name"),
+    oldValue: text("old_value").notNull(),
+    newValue: text("new_value").notNull(),
+    source: markCorrectionSourceEnum("source").notNull(),
+    correctedBy: text("corrected_by").references(() => users.id),
+    reason: text("reason"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("mark_corrections_round_idx").on(table.roundId),
+  ],
+);

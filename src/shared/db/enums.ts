@@ -150,3 +150,13 @@ export const resultStatusEnum = pgEnum("result_status", [
   "reviewed",
   "published",
 ]);
+
+export const judgeSessionStatusEnum = pgEnum("judge_session_status", [
+  "active",
+  "ended",
+]);
+
+export const markCorrectionSourceEnum = pgEnum("mark_correction_source", [
+  "scrutineer",
+  "judge",
+]);

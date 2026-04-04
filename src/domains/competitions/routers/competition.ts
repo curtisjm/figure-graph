@@ -341,7 +341,7 @@ export const competitionRouter = router({
     .input(
       z.object({
         competitionId: z.number(),
-        compCode: z.string().min(1).max(20),
+        compCode: z.string().min(3).max(4).regex(/^[A-Z0-9]+$/, "Must be 3-4 uppercase letters/numbers"),
       }),
     )
     .mutation(async ({ ctx, input }) => {
