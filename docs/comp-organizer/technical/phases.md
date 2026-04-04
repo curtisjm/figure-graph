@@ -9,17 +9,36 @@ Competition CRUD, schedule builder, and event management.
 
 **Goal**: Organizers can create and fully configure a competition structure.
 
-- [ ] Database schema: competitions, competition_days, schedule_blocks, events, event_dances
-- [ ] Enums: competition status, schedule block type, dance style, round type, staff roles
-- [ ] Competition CRUD router (create, update, delete, get, list)
-- [ ] Schedule builder: default 1-day template, add/remove days, add/rename/reorder sessions and breaks
-- [ ] Event management: generate default events from style/level grouping rules, allow organizer overrides
-- [ ] Staff assignment schema + router (scrutineer, chairman, judges, emcee, deck captains, registration)
+**Backend** (implemented):
+- [x] Database schema: competitions, competition_days, schedule_blocks, competition_events, event_dances, judges, competition_staff, competition_judges
+- [x] Enums: competition_status, schedule_block_type, competition_staff_role, dance_style, event_type
+- [x] Competition CRUD router: create (auto-slug), update, delete (owner only), getBySlug, list (with pagination/filters), getForDashboard
+- [x] Status transitions: updateStatus (any direction, no data deleted on backward transitions)
+- [x] Judge tablet auth setup: setCompCode, setMasterPassword (bcrypt hashed)
+- [x] Schedule builder: applyDefaultTemplate (6 sessions), addDay/updateDay/removeDay, addBlock/updateBlock/removeBlock, reorderDays/reorderBlocks
+- [x] Event management: generateDefaults from style/level grouping config, create/update/delete, reorderInSession, updateDances
+- [x] Default event generation config: `src/domains/competitions/lib/default-events.ts` — grouping rules for Standard, Smooth, Latin, Rhythm across all 7 levels
+- [x] Staff assignment router: assign/remove platform users to roles
+- [x] Judge directory + competition assignments: global judge CRUD, search, assignToCompetition/removeFromCompetition
+- [x] Integration tests: 40 tests across 5 test files (competition, schedule, event, staff, judge)
+
+**Frontend** (not yet started):
 - [ ] Dashboard page with checklist/timeline view and navigation to sub-pages
 - [ ] Competition home/info page (public-facing)
 - [ ] Rules page (organizer-editable, public-viewable)
+- [ ] Creation wizard UI (multi-step: basic info → schedule → events → details → publish)
+- [ ] Schedule builder UI (drag-and-drop reordering)
+- [ ] Event management UI (generate defaults, prune, edit groupings)
+- [ ] Staff/judge assignment UI
 
-**Key decisions**: Default event grouping rules are defined as application config (not database), applied when generating events for a new competition. Organizer edits are stored per-competition.
+**Key decisions**:
+- Default event grouping rules are defined as application config (not database), applied when generating events for a new competition. Organizer edits are stored per-competition.
+- `requireCompOrgRole` permission check: org admin/owner OR assigned scrutineer can manage a competition. Duplicated per-router for self-containment.
+- Reorder operations use a two-pass approach (set to negative positions, then final positions) to avoid unique constraint violations on position indexes.
+- `sessionId` on `competition_events` uses `onDelete: "set null"` — removing a schedule block unlinks events rather than deleting them.
+- `competitions.compCode` is globally unique (not per-org) since it's the tablet auth entry point.
+- `competition_days.date` uses string mode to avoid timezone-shift issues with date-only values.
+- bcryptjs used for master password hashing (added as dependency).
 
 ---
 
