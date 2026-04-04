@@ -3,12 +3,14 @@ import {
   serial,
   text,
   integer,
+  boolean,
   timestamp,
   date,
   numeric,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { users } from "@shared/schema";
 import { organizations } from "@orgs/schema";
 import {
@@ -18,6 +20,9 @@ import {
   competitionStaffRoleEnum,
   danceStyleEnum,
   eventTypeEnum,
+  pricingModelEnum,
+  danceRoleEnum,
+  paymentMethodEnum,
 } from "@shared/db/enums";
 
 // ── Competitions ────────────────────────────────────────────────────
@@ -47,6 +52,10 @@ export const competitions = pgTable("competitions", {
   baseFee: numeric("base_fee", { precision: 10, scale: 2 }),
   numberStart: integer("number_start").default(1),
   numberExclusions: integer("number_exclusions").array(),
+  pricingModel: pricingModelEnum("pricing_model").notNull().default("flat_fee"),
+  requirePaymentAtRegistration: boolean("require_payment_at_registration").notNull().default(false),
+  stripeAccountId: text("stripe_account_id"),
+  stripeOnboardingComplete: boolean("stripe_onboarding_complete").notNull().default(false),
   compCode: text("comp_code").unique(),
   masterPasswordHash: text("master_password_hash"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -113,6 +122,7 @@ export const competitionEvents = pgTable(
     position: integer("position"),
     maxFinalSize: integer("max_final_size"),
     maxHeatSize: integer("max_heat_size"),
+    entryPrice: numeric("entry_price", { precision: 10, scale: 2 }),
   },
   (table) => [
     index("competition_events_comp_session_idx").on(
@@ -199,3 +209,142 @@ export const competitionJudges = pgTable(
     ),
   ],
 );
+
+// ── Pricing Tiers ───────────────────────────────────────────────────
+
+export const pricingTiers = pgTable("pricing_tiers", {
+  id: serial("id").primaryKey(),
+  competitionId: integer("competition_id")
+    .references(() => competitions.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text("name").notNull(),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  position: integer("position"),
+});
+
+// ── Competition Registrations ───────────────────────────────────────
+
+export const competitionRegistrations = pgTable(
+  "competition_registrations",
+  {
+    id: serial("id").primaryKey(),
+    competitionId: integer("competition_id")
+      .references(() => competitions.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: text("user_id")
+      .references(() => users.id)
+      .notNull(),
+    competitorNumber: integer("competitor_number"),
+    pricingTierId: integer("pricing_tier_id").references(() => pricingTiers.id),
+    amountOwed: numeric("amount_owed", { precision: 10, scale: 2 }).notNull().default("0"),
+    paidConfirmed: boolean("paid_confirmed").notNull().default(false),
+    checkedIn: boolean("checked_in").notNull().default(false),
+    orgId: integer("org_id").references(() => organizations.id),
+    registeredAt: timestamp("registered_at").defaultNow().notNull(),
+    registeredBy: text("registered_by")
+      .references(() => users.id)
+      .notNull(),
+    cancelled: boolean("cancelled").notNull().default(false),
+  },
+  (table) => [
+    uniqueIndex("comp_reg_comp_user_idx").on(table.competitionId, table.userId),
+    uniqueIndex("comp_reg_comp_number_idx")
+      .on(table.competitionId, table.competitorNumber)
+      .where(sql`competitor_number IS NOT NULL`),
+    index("comp_reg_comp_org_idx").on(table.competitionId, table.orgId),
+  ],
+);
+
+// ── Entries ─────────────────────────────────────────────────────────
+
+export const entries = pgTable(
+  "entries",
+  {
+    id: serial("id").primaryKey(),
+    eventId: integer("event_id")
+      .references(() => competitionEvents.id, { onDelete: "cascade" })
+      .notNull(),
+    leaderRegistrationId: integer("leader_registration_id")
+      .references(() => competitionRegistrations.id)
+      .notNull(),
+    followerRegistrationId: integer("follower_registration_id")
+      .references(() => competitionRegistrations.id)
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdBy: text("created_by")
+      .references(() => users.id)
+      .notNull(),
+    scratched: boolean("scratched").notNull().default(false),
+  },
+  (table) => [
+    uniqueIndex("entries_event_couple_idx").on(
+      table.eventId,
+      table.leaderRegistrationId,
+      table.followerRegistrationId,
+    ),
+    index("entries_event_idx").on(table.eventId),
+    index("entries_leader_idx").on(table.leaderRegistrationId),
+    index("entries_follower_idx").on(table.followerRegistrationId),
+  ],
+);
+
+// ── Payments ────────────────────────────────────────────────────────
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: serial("id").primaryKey(),
+    registrationId: integer("registration_id")
+      .references(() => competitionRegistrations.id, { onDelete: "cascade" })
+      .notNull(),
+    amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+    method: paymentMethodEnum("method").notNull(),
+    note: text("note"),
+    entryId: integer("entry_id").references(() => entries.id),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
+    processedBy: text("processed_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("payments_registration_idx").on(table.registrationId)],
+);
+
+// ── TBA Listings ────────────────────────────────────────────────────
+
+export const tbaListings = pgTable(
+  "tba_listings",
+  {
+    id: serial("id").primaryKey(),
+    competitionId: integer("competition_id")
+      .references(() => competitions.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: text("user_id")
+      .references(() => users.id)
+      .notNull(),
+    style: danceStyleEnum("style").notNull(),
+    level: competitionLevelEnum("level").notNull(),
+    role: danceRoleEnum("role").notNull(),
+    notes: text("notes"),
+    fulfilled: boolean("fulfilled").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("tba_listings_comp_fulfilled_idx").on(
+      table.competitionId,
+      table.fulfilled,
+    ),
+  ],
+);
+
+// ── Team Match Submissions ──────────────────────────────────────────
+
+export const teamMatchSubmissions = pgTable("team_match_submissions", {
+  id: serial("id").primaryKey(),
+  competitionId: integer("competition_id")
+    .references(() => competitions.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: text("user_id")
+    .references(() => users.id)
+    .notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

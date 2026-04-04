@@ -14,6 +14,12 @@ import {
   judges,
   competitionStaff,
   competitionJudges,
+  competitionRegistrations,
+  entries,
+  payments,
+  pricingTiers,
+  tbaListings,
+  teamMatchSubmissions,
 } from "@competitions/schema";
 
 // ---------- Caller ----------
@@ -179,6 +185,24 @@ export async function createJudge(
   return judge;
 }
 
+export async function createRegistration(
+  competitionId: number,
+  userId: string,
+  overrides: Partial<typeof competitionRegistrations.$inferInsert> = {},
+) {
+  const [reg] = await db()
+    .insert(competitionRegistrations)
+    .values({
+      competitionId,
+      userId,
+      registeredBy: overrides.registeredBy ?? userId,
+      amountOwed: overrides.amountOwed ?? "0",
+      ...overrides,
+    })
+    .returning();
+  return reg;
+}
+
 // ---------- Cleanup ----------
 
 /**
@@ -189,6 +213,12 @@ export async function truncateAll() {
   const pool = getTestPool();
   await pool.query(`
     TRUNCATE
+      team_match_submissions,
+      tba_listings,
+      payments,
+      entries,
+      competition_registrations,
+      pricing_tiers,
       event_dances,
       competition_events,
       schedule_blocks,

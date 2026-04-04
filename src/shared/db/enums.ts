@@ -96,3 +96,20 @@ export const eventTypeEnum = pgEnum("event_type", [
   "single_dance",
   "multi_dance",
 ]);
+
+export const pricingModelEnum = pgEnum("pricing_model", [
+  "flat_fee",
+  "per_event",
+]);
+
+export const danceRoleEnum = pgEnum("dance_role", [
+  "leader",
+  "follower",
+]);
+
+export const paymentMethodEnum = pgEnum("payment_method", [
+  "online",
+  "cash",
+  "check",
+  "other",
+]);
