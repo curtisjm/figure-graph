@@ -138,3 +138,15 @@ export const roundTypeEnum = pgEnum("round_type", [
   "semi_final",
   "final",
 ]);
+
+export const markStatusEnum = pgEnum("mark_status", [
+  "pending",
+  "submitted",
+  "confirmed",
+]);
+
+export const resultStatusEnum = pgEnum("result_status", [
+  "computed",
+  "reviewed",
+  "published",
+]);

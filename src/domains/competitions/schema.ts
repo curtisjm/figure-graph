@@ -7,6 +7,7 @@ import {
   timestamp,
   date,
   numeric,
+  jsonb,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -27,6 +28,8 @@ import {
   addDropStatusEnum,
   roundStatusEnum,
   roundTypeEnum,
+  markStatusEnum,
+  resultStatusEnum,
 } from "@shared/db/enums";
 
 // ── Competitions ────────────────────────────────────────────────────
@@ -458,4 +461,180 @@ export const eventTimeOverrides = pgTable("event_time_overrides", {
     .notNull()
     .unique(),
   estimatedMinutes: numeric("estimated_minutes", { precision: 5, scale: 1 }).notNull(),
+});
+
+// ── Callback Marks ─────────────────────────────────────────────────
+
+export const callbackMarks = pgTable(
+  "callback_marks",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    judgeId: integer("judge_id")
+      .references(() => judges.id)
+      .notNull(),
+    entryId: integer("entry_id")
+      .references(() => entries.id)
+      .notNull(),
+    marked: boolean("marked").notNull(),
+  },
+  (table) => [
+    uniqueIndex("callback_marks_round_judge_entry_idx").on(
+      table.roundId,
+      table.judgeId,
+      table.entryId,
+    ),
+  ],
+);
+
+// ── Final Marks ────────────────────────────────────────────────────
+
+export const finalMarks = pgTable(
+  "final_marks",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    judgeId: integer("judge_id")
+      .references(() => judges.id)
+      .notNull(),
+    entryId: integer("entry_id")
+      .references(() => entries.id)
+      .notNull(),
+    danceName: text("dance_name").notNull(),
+    placement: integer("placement").notNull(),
+  },
+  (table) => [
+    uniqueIndex("final_marks_round_judge_entry_dance_idx").on(
+      table.roundId,
+      table.judgeId,
+      table.entryId,
+      table.danceName,
+    ),
+    uniqueIndex("final_marks_round_judge_dance_place_idx").on(
+      table.roundId,
+      table.judgeId,
+      table.danceName,
+      table.placement,
+    ),
+  ],
+);
+
+// ── Judge Submissions ──────────────────────────────────────────────
+
+export const judgeSubmissions = pgTable(
+  "judge_submissions",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    judgeId: integer("judge_id")
+      .references(() => judges.id)
+      .notNull(),
+    status: markStatusEnum("status").notNull().default("pending"),
+    submittedAt: timestamp("submitted_at"),
+    confirmedAt: timestamp("confirmed_at"),
+  },
+  (table) => [
+    uniqueIndex("judge_submissions_round_judge_idx").on(
+      table.roundId,
+      table.judgeId,
+    ),
+  ],
+);
+
+// ── Callback Results ───────────────────────────────────────────────
+
+export const callbackResults = pgTable(
+  "callback_results",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    entryId: integer("entry_id")
+      .references(() => entries.id)
+      .notNull(),
+    totalMarks: integer("total_marks").notNull(),
+    advanced: boolean("advanced").notNull(),
+  },
+  (table) => [
+    uniqueIndex("callback_results_round_entry_idx").on(
+      table.roundId,
+      table.entryId,
+    ),
+  ],
+);
+
+// ── Final Results ──────────────────────────────────────────────────
+
+export const finalResults = pgTable(
+  "final_results",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    entryId: integer("entry_id")
+      .references(() => entries.id)
+      .notNull(),
+    danceName: text("dance_name"),
+    placement: integer("placement").notNull(),
+    placementValue: numeric("placement_value", { precision: 4, scale: 1 }),
+    tiebreakRule: text("tiebreak_rule"),
+  },
+  (table) => [
+    uniqueIndex("final_results_round_entry_dance_idx").on(
+      table.roundId,
+      table.entryId,
+      table.danceName,
+    ),
+    index("final_results_round_placement_idx").on(
+      table.roundId,
+      table.placement,
+    ),
+  ],
+);
+
+// ── Tabulation Tables ──────────────────────────────────────────────
+
+export const tabulationTables = pgTable(
+  "tabulation_tables",
+  {
+    id: serial("id").primaryKey(),
+    roundId: integer("round_id")
+      .references(() => rounds.id, { onDelete: "cascade" })
+      .notNull(),
+    entryId: integer("entry_id")
+      .references(() => entries.id)
+      .notNull(),
+    danceName: text("dance_name"),
+    tableData: jsonb("table_data").notNull(),
+  },
+  (table) => [
+    uniqueIndex("tabulation_tables_round_entry_dance_idx").on(
+      table.roundId,
+      table.entryId,
+      table.danceName,
+    ),
+  ],
+);
+
+// ── Round Results Meta ─────────────────────────────────────────────
+
+export const roundResultsMeta = pgTable("round_results_meta", {
+  id: serial("id").primaryKey(),
+  roundId: integer("round_id")
+    .references(() => rounds.id, { onDelete: "cascade" })
+    .notNull()
+    .unique(),
+  status: resultStatusEnum("status").notNull().default("computed"),
+  computedAt: timestamp("computed_at"),
+  reviewedBy: text("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  publishedAt: timestamp("published_at"),
 });
