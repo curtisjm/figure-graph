@@ -31,6 +31,15 @@ src/app/competitions/
       schedule-estimation/page.tsx               # Time estimation
       stats/page.tsx                             # Stats + awards calculator
 
+    dashboard/
+      comp-day/
+        page.tsx                                 # Scrutineer comp-day dashboard
+        registration/page.tsx                    # Registration table (check-in, payments)
+        deck-captain/page.tsx                    # Deck captain floor check-in (tablet)
+        emcee/page.tsx                           # Emcee schedule + announcements
+    display/page.tsx                             # Projector display (standalone, no auth)
+    live/page.tsx                                # Competitor live view (public)
+
 src/app/judge/
   page.tsx                                       # Judge tablet (standalone, no Clerk)
 ```
@@ -41,7 +50,10 @@ src/app/judge/
 src/domains/competitions/components/
   competition-card.tsx          # Card for discovery list
   status-badge.tsx              # Color-coded status badge (6 statuses)
-  dashboard-nav.tsx             # Sidebar with sectioned nav (Setup, Entries, Competition)
+  dashboard-nav.tsx             # Sidebar with sectioned nav (Setup, Entries, Competition, Comp Day)
+
+src/domains/competitions/lib/
+  ably-comp-client.ts           # Ably subscription hooks for comp live channel (useCompLive, useCompLiveWithInvalidation)
 ```
 
 ## UI Stack
@@ -54,6 +66,7 @@ src/domains/competitions/components/
 | @dnd-kit/react v2 | Drag-and-drop (schedule block reordering) |
 | @tanstack/react-table | Data tables (installed, not yet used) |
 | jose | JWT creation/verification for judge tablet auth |
+| ably | Realtime subscriptions (comp live channel, messaging) |
 | lucide-react | Icons |
 
 ## Key Patterns
@@ -151,8 +164,11 @@ The sidebar organizes dashboard pages into three sections:
 **Entries** — Registration and entry management
 - Registrations, Numbers, Add/Drop, Payments
 
-**Competition** — Day-of and post-comp operations
+**Competition** — Pre-comp and scoring operations
 - Rounds, Scoring, Schedule Estimation, Stats & Awards
+
+**Comp Day** — Day-of operations
+- Dashboard, Reg. Table, Deck Captain, Emcee
 
 Plus Settings at the bottom.
 
@@ -183,4 +199,10 @@ Plus Settings at the bottom.
 | Scoring | `dashboard/scoring` | Admin | Scrutineer controls, round start/stop, submissions, compute, review, publish, corrections |
 | Schedule Est. | `dashboard/schedule-estimation` | Admin | Time breakdown, settings |
 | Stats | `dashboard/stats` | Admin | Stats cards, awards calculator |
+| Comp Day Dashboard | `dashboard/comp-day` | Staff | Active round, check-in stats, event progress |
+| Reg. Table | `dashboard/comp-day/registration` | Staff | Check-in, payments, add/drop management |
+| Deck Captain | `dashboard/comp-day/deck-captain` | Staff | Touch-optimized couple check-in grid |
+| Emcee | `dashboard/comp-day/emcee` | Staff | Schedule timeline, announcements, results readout |
+| Projector Display | `/[slug]/display` | Public | Full-screen dark projection display |
+| Competitor Live | `/[slug]/live` | Public | Live schedule, my events, published results |
 | Judge Tablet | `/judge` | Judge JWT | Comp code auth, callback marking, final ranking, submit/edit flow |

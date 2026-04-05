@@ -13,10 +13,10 @@ Linear epic: [WOF-13](https://linear.app/floorcraft/issue/WOF-13/competition-org
 | Phase 3: Pre-comp Operations | Complete | Complete | Add/drop, rounds, schedule estimation, stats, awards |
 | Phase 4: Scoring Engine | Complete | Complete | Scoring workflow, public results with tabulation |
 | Phase 5: Judge UI | Complete | Complete | Judge tablet, scrutineer controls, JWT auth |
-| Phase 6: Comp Day Operations | Designed | Not started | Real-time views for all staff roles |
+| Phase 6: Comp Day Operations | Complete | Complete | Real-time views for all staff roles |
 | Phase 7: Post-comp & Global | Designed | Not started | Results history, feedback, global search |
 
-**Total: 263 backend tests passing, 24 frontend pages implemented.**
+**Total: 305 backend tests passing, 30 frontend pages implemented.**
 
 ## Documentation Structure
 

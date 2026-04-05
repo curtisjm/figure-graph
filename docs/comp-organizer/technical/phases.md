@@ -197,21 +197,36 @@ All day-of views and workflows.
 
 **Goal**: Full day-of-competition experience for all staff roles.
 
-- [ ] Scrutineer controls: start/manage sessions, run events, advance rounds
-- [ ] Deck captain view (multiple captains, shared real-time state):
-  - [ ] Check-in tab: competitors by number, check-in, scratch (reversible)
-  - [ ] Stay-on-floor indicators with upcoming event list
-  - [ ] Schedule tab
-- [ ] Emcee view: schedule, on-deck, results, announcement notes (from emcee/scrutineer/organizer)
-- [ ] Registration table view (multiple staff, shared state):
-  - [ ] Entry table sorted by org, partners grouped
-  - [ ] Payment and check-in indicators
-  - [ ] Approve add/drop requests
-- [ ] Projector display: unauthenticated URL (`/competitions/[slug]/display`)
-  - [ ] Upcoming events, times, couple numbers, heat assignments
-  - [ ] Auto-updates via Ably
-- [ ] Competitor live view: schedule + on-deck events
-- [ ] Ably channel architecture for all real-time views
+**Backend** (implemented):
+- [x] Database schema: registration_checkins, deck_captain_checkins, announcement_notes
+- [x] Enums: checkin_type, announcement_note_type
+- [x] Ably live channel: `comp:{compId}:live` with publishToLive, createPublicAblyToken
+- [x] Scrutineer dashboard router: getDashboard, getEventProgress, markEventComplete, updateScheduleLive
+- [x] Deck captain router: getCheckinView (with stay-on-floor indicators), getScheduleView, checkin/scratch/unscratch
+- [x] Emcee router: getEmceeView, getEventResults, createNote/updateNote/deleteNote
+- [x] Registration table router: getRegistrationTable (grouped by org), checkinRegistration/undoCheckin, recordPayment, approveAddDrop/rejectAddDrop
+- [x] Live view router (public): getSchedule, getMyEvents (optional auth), getAblyToken, getPublishedResults
+- [x] Integration tests: 42 tests across 5 test files (registration-table, deck-captain, emcee, scrutineer-dashboard, live-view)
+
+**Frontend** (implemented):
+- [x] Ably competition client hook (`useCompLive`, `useCompLiveWithInvalidation`) — singleton with ref counting, subscribes to live + results channels
+- [x] Dashboard nav update — new "Comp Day" section with 4 nav items
+- [x] Scrutineer dashboard page — active round card, judge submissions, check-in stats, event progress
+- [x] Registration table page — grouped by org, check-in checkboxes, payment recording, add/drop management
+- [x] Deck captain page — touch-optimized couple card grid, tap to cycle status, stay-on-floor indicators
+- [x] Emcee page — schedule timeline, inline announcements CRUD, results readout for completed events
+- [x] Projector display (`/competitions/[slug]/display`) — full-screen dark theme, auto-scroll to active event
+- [x] Competitor live view (`/competitions/[slug]/live`) — public schedule, my events toggle, published results
+
+**Key decisions**:
+- Two check-in systems: registration (once per person, arrival) vs deck captain (per couple per round, floor readiness)
+- `registrationCheckins` table provides audit trail; keeps existing `checkedIn` boolean in sync for backward compat
+- Deck captain scratches are operational/cosmetic — don't affect scoring
+- Announcement notes are positioned inline in the schedule (anchored to `positionAfterEventId`)
+- Stay-on-floor indicator computed at query time by checking if entry's leader/follower appears in next session event
+- All mutations publish to `comp:{compId}:live` Ably channel (best-effort)
+- Live view uses `publicProcedure` with optional auth for `getMyEvents`
+- Public Ably token is subscribe-only on `live` + `results` channels
 
 ---
 
