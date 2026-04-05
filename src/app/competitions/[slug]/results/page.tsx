@@ -1,165 +1,211 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { trpc } from "@shared/lib/trpc";
 import { Badge } from "@shared/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
+import { Card, CardContent } from "@shared/ui/card";
 import { Skeleton } from "@shared/ui/skeleton";
-import { Trophy, ChevronDown, ChevronRight } from "lucide-react";
+import { cn } from "@shared/lib/utils";
+import { Trophy, ChevronRight } from "lucide-react";
 
-export default function ResultsPage() {
+export default function CompetitionResultsPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { data: comp, isLoading: compLoading } = trpc.competition.getBySlug.useQuery({ slug });
-  const { data: events } = trpc.event.listByCompetition.useQuery(
+  const { data: comp } = trpc.competition.getBySlug.useQuery({ slug });
+
+  const { data: results, isLoading } = trpc.results.getByCompetition.useQuery(
     { competitionId: comp?.id ?? 0 },
     { enabled: !!comp },
   );
 
-  const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
+  if (!comp || isLoading) {
+    return <ResultsSkeleton />;
+  }
 
-  if (compLoading || !comp) {
+  if (!results || results.events.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto py-8 px-4 space-y-4">
-        <Skeleton className="h-10 w-64" />
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
-        ))}
+      <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+        <ResultsHeader compName={comp.name} orgName={null} />
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <Trophy className="size-10 mx-auto mb-3 opacity-30" />
+            <p>No results published yet.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  // Group events by session/block for display
+  const eventsBySession = new Map<number | null, typeof results.events>();
+  for (const event of results.events) {
+    const key = event.sessionId;
+    if (!eventsBySession.has(key)) eventsBySession.set(key, []);
+    eventsBySession.get(key)!.push(event);
+  }
+
+  // Map session IDs to block labels
+  const blockMap = new Map(results.blocks.map((b) => [b.id, b]));
+
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
-      <div className="flex items-center gap-3">
-        <Trophy className="size-6 text-yellow-500" />
-        <div>
-          <h1 className="text-2xl font-bold">{comp.name}</h1>
-          <p className="text-muted-foreground">Results</p>
-        </div>
-      </div>
+      <ResultsHeader
+        compName={results.competition.name}
+        orgName={results.competition.organization}
+      />
 
-      {!events?.length ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            No events available.
-          </CardContent>
-        </Card>
-      ) : (
-        events.map((event) => (
-          <EventResultCard
-            key={event.id}
-            event={event}
-            expanded={expandedEvent === event.id}
-            onToggle={() =>
-              setExpandedEvent(expandedEvent === event.id ? null : event.id)
-            }
-          />
-        ))
+      <div className="space-y-8">
+        {[...eventsBySession.entries()].map(([sessionId, events]) => {
+          const block = sessionId != null ? blockMap.get(sessionId) : null;
+
+          return (
+            <div key={sessionId ?? "unsorted"} className="space-y-3">
+              {block && (
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {block.label}
+                </h2>
+              )}
+
+              {events.map((event) => (
+                <Link
+                  key={event.eventId}
+                  href={`/competitions/${slug}/results/${event.eventId}`}
+                  className="block"
+                >
+                  <Card className="hover:bg-accent/30 transition-colors group">
+                    <CardContent className="py-4 px-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-medium truncate">
+                            {event.eventName}
+                          </span>
+                          <div className="flex gap-1 shrink-0">
+                            <Badge variant="secondary" className="text-xs capitalize">
+                              {event.style}
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs capitalize">
+                              {event.level}
+                            </Badge>
+                          </div>
+                        </div>
+                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                      </div>
+
+                      {/* Top 3 preview */}
+                      <div className="space-y-1">
+                        {event.placements.slice(0, 3).map((p) => (
+                          <PlacementRow
+                            key={p.placement}
+                            placement={p.placement}
+                            coupleNumber={p.coupleNumber}
+                            leaderName={p.leaderName}
+                            followerName={p.followerName}
+                            organization={p.organization}
+                          />
+                        ))}
+                        {event.placements.length > 3 && (
+                          <p className="text-xs text-muted-foreground pl-9 pt-1">
+                            +{event.placements.length - 3} more
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Components ─────────────────────────────────────────────────
+
+function ResultsHeader({
+  compName,
+  orgName,
+}: {
+  compName: string;
+  orgName: string | null;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <Trophy className="size-6 text-amber-500" />
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{compName}</h1>
+        <p className="text-sm text-muted-foreground">
+          {orgName ? `${orgName} · Results` : "Results"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PlacementRow({
+  placement,
+  coupleNumber,
+  leaderName,
+  followerName,
+  organization,
+}: {
+  placement: number;
+  coupleNumber: number | null;
+  leaderName: string | null;
+  followerName: string | null;
+  organization: string | null;
+}) {
+  const isMedal = placement <= 3;
+  const medalColor =
+    placement === 1
+      ? "text-amber-600 dark:text-amber-400"
+      : placement === 2
+        ? "text-gray-500 dark:text-gray-400"
+        : "text-orange-600 dark:text-orange-400";
+
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <span
+        className={cn(
+          "w-6 text-right font-bold tabular-nums",
+          isMedal ? medalColor : "text-muted-foreground",
+        )}
+      >
+        {placement}
+      </span>
+      {coupleNumber != null && (
+        <Badge variant="outline" className="text-xs tabular-nums px-1.5 py-0 shrink-0">
+          #{coupleNumber}
+        </Badge>
+      )}
+      <span className="truncate">
+        {leaderName ?? "TBD"} & {followerName ?? "TBD"}
+      </span>
+      {organization && (
+        <span className="text-xs text-muted-foreground shrink-0 ml-auto">
+          {organization}
+        </span>
       )}
     </div>
   );
 }
 
-function EventResultCard({
-  event,
-  expanded,
-  onToggle,
-}: {
-  event: any;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  const { data: rounds } = trpc.round.listByEvent.useQuery(
-    { eventId: event.id },
-    { enabled: expanded },
-  );
+// ── Skeleton ───────────────────────────────────────────────────
 
-  // Find the final round
-  const finalRound = rounds?.find((r: any) => r.roundType === "final");
-
-  const { data: results } = trpc.scoring.getResults.useQuery(
-    { roundId: finalRound?.id ?? 0 },
-    { enabled: !!finalRound },
-  );
-
+function ResultsSkeleton() {
   return (
-    <Card>
-      <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent/30 transition-colors"
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-3">
-          {expanded ? (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="size-4 text-muted-foreground" />
-          )}
-          <div>
-            <span className="text-sm font-medium">{event.name}</span>
-            <div className="flex gap-1 mt-0.5">
-              <Badge variant="secondary" className="text-xs capitalize">{event.style}</Badge>
-              <Badge variant="secondary" className="text-xs capitalize">{event.level}</Badge>
-            </div>
-          </div>
+    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center gap-3">
+        <Skeleton className="size-6 rounded" />
+        <div className="space-y-1">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-24" />
         </div>
       </div>
-
-      {expanded && (
-        <CardContent className="pt-0 pb-4">
-          {!results?.results?.length ? (
-            <p className="text-sm text-muted-foreground py-2">
-              Results not yet published.
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {results.results.map((r: any, i: number) => (
-                <div
-                  key={r.entryId ?? i}
-                  className="flex items-center gap-3 p-2 rounded-md border"
-                >
-                  <span className={`text-sm font-bold w-8 text-right ${
-                    (r.placement ?? i + 1) <= 3 ? "text-yellow-600" : "text-muted-foreground"
-                  }`}>
-                    {r.placement ?? i + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <span className="text-sm">
-                      {r.leaderName ?? "Unknown"} & {r.followerName ?? "Unknown"}
-                    </span>
-                    {r.orgName && (
-                      <span className="text-xs text-muted-foreground ml-2">{r.orgName}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tabulation table */}
-          {results?.tabulation?.length ? (
-            <div className="mt-4">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Tabulation</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs border-collapse">
-                  <tbody>
-                    {results.tabulation.map((row, i) => {
-                      const data = row.tableData as any;
-                      return (
-                        <tr key={i} className="border-b">
-                          <td className="p-1 font-mono">{row.entryId}</td>
-                          <td className="p-1 text-muted-foreground">{row.danceName}</td>
-                          <td className="p-1">{data ? JSON.stringify(data).slice(0, 80) : "—"}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : null}
-        </CardContent>
-      )}
-    </Card>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-32 rounded-lg" />
+      ))}
+    </div>
   );
 }
