@@ -24,6 +24,8 @@ import {
   ClipboardCheck,
   Flag,
   Mic,
+  TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 
 const navSections = [
@@ -62,6 +64,18 @@ const navSections = [
       { label: "Reg. Table", href: "/comp-day/registration", icon: ClipboardCheck },
       { label: "Deck Captain", href: "/comp-day/deck-captain", icon: Flag },
       { label: "Emcee", href: "/comp-day/emcee", icon: Mic },
+    ],
+  },
+  {
+    label: "Analytics",
+    items: [
+      { label: "Analytics", href: "/analytics", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "Post-Comp",
+    items: [
+      { label: "Feedback", href: "/feedback", icon: MessageSquare },
     ],
   },
   {

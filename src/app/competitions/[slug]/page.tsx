@@ -167,6 +167,19 @@ export default function CompetitionPage() {
             {(comp.status === "entries_closed" || comp.status === "running") && (
               <QuickLink href={`/competitions/${slug}/add-drop`} icon={FileText} label="Add/Drop Form" />
             )}
+            {comp.status === "running" && (
+              <QuickLink href={`/competitions/${slug}/live`} icon={Trophy} label="Live View" />
+            )}
+            {comp.status === "finished" && (
+              <QuickLink href={`/competitions/${slug}/feedback`} icon={MessageSquare} label="Give Feedback" />
+            )}
+            {membershipData?.membership && comp.orgSlug && (
+              <QuickLink
+                href={`/orgs/${comp.orgSlug}/competitions/${slug}`}
+                icon={Building2}
+                label="My Org's View"
+              />
+            )}
           </div>
         </section>
       </div>
