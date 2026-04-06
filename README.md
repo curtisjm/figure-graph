@@ -1,6 +1,6 @@
 # World of Floorcraft
 
-A social platform for the ballroom dance community built around the ISTD syllabus. Browse figures, explore transitions as interactive graphs, build competition routines, share technique articles, and connect with dancers and teams.
+A social platform for the ballroom dance community built around the ISTD syllabus. Browse figures, explore transitions as interactive graphs, build competition routines, organize and score competitions with the skating system, share technique articles, and connect with dancers and teams.
 
 ## Background
 
@@ -39,23 +39,37 @@ Figures are introduced at progressively higher examination levels. Higher levels
 - Level ceiling filtering (Bronze/Silver/Gold/Fellow)
 - Publish routines to your profile or share as feed posts
 
-### Social Network (in development)
+### Social Network
 - Share routines with captions and write technique articles (WYSIWYG markdown editor)
 - Follow other dancers, like/comment/save posts
 - Organize saved posts into folders
 - User profiles with competition level badges
 - Following + Explore feed tabs
 
-### Organizations (in development)
+### Organizations
 - Create or join teams (university ballroom teams, clubs, etc.)
 - Configurable membership: open, invite-only, or request-to-join
 - Org profile pages with posts, members, and settings
 - Org-scoped content visibility
 
-### Real-Time Messaging (in development)
+### Real-Time Messaging
 - Direct messages, group chats, and org channels
 - Real-time delivery via Ably
 - Typing indicators and presence
+
+### Competition Organizer
+Full competition lifecycle management with real-time scoring using the [skating system](https://en.wikipedia.org/wiki/Skating_system).
+
+- **Setup** — Create competitions with multi-step wizard, schedule builder with drag-and-drop, event management with default groupings, staff/judge assignments
+- **Registration** — Couple registration, per-event or flat-fee pricing, Stripe Connect payments, competitor number assignment, TBA partner finder, team match submissions
+- **Pre-comp** — Add/drop request management, automatic round generation with heat assignments, schedule estimation, statistics dashboard, award calculator
+- **Scoring** — Full skating system engine (Rules 5–11), callback tally, single and multi-dance placement, tabulation tables, results workflow (compute → review → publish)
+- **Judge UI** — Standalone tablet interface with separate JWT auth (no platform account required), tap-to-toggle callback marking, tap-to-rank finals, real-time submission via Ably
+- **Comp Day** — Scrutineer dashboard, registration table, deck captain check-in grid, emcee schedule with announcements, projector display, competitor live view
+- **Post-comp** — Public results with Summary + Marks tabs, competitor search and history, competition calendar with filters, organizer feedback forms with analytics, financial analytics, record removal requests
+- **Org Views** — Per-organization schedule, entries, and results for team coaches and admins
+
+38 frontend pages, 26 tRPC routers, 230+ integration tests. See [`docs/comp-organizer/`](docs/comp-organizer/) for full documentation.
 
 ## Tech Stack
 
@@ -69,8 +83,11 @@ Figures are introduced at progressively higher examination levels. Higher levels
 | ORM | [Drizzle](https://orm.drizzle.team/) | TypeScript-first SQL ORM |
 | API | [tRPC v11](https://trpc.io/) | End-to-end typesafe API layer |
 | Auth | [Clerk](https://clerk.com/) | Authentication with OAuth providers |
-| Real-time | [Ably](https://ably.com/) | WebSocket messaging (planned) |
-| Editor | [Tiptap](https://tiptap.dev/) | WYSIWYG markdown editor (planned) |
+| Real-time | [Ably](https://ably.com/) | WebSocket messaging and live competition updates |
+| Editor | [Tiptap](https://tiptap.dev/) | WYSIWYG markdown editor for posts |
+| Payments | [Stripe](https://stripe.com/) | Competition registration payments via Connect |
+| Judge Auth | [jose](https://github.com/panva/jose) | Edge-compatible JWT for judge tablet sessions |
+| Drag & Drop | [@dnd-kit/react](https://dndkit.com/) | Schedule builder reordering |
 | Hosting | [Vercel](https://vercel.com/) | Deployment platform |
 | Package Manager | [pnpm](https://pnpm.io/) | Fast, disk-efficient package manager |
 | Dev Environment | [Nix](https://nixos.org/) flake | Reproducible development environment |
@@ -87,6 +104,7 @@ src/
     social/           # Feed, posts, comments, likes, follows, saves
     messaging/        # DMs, group chats, org channels
     orgs/             # Organizations, membership, org profiles
+    competitions/     # Competition organizer, scoring, judge UI, comp-day ops
   shared/
     auth/             # Clerk helpers, protected procedures
     db/               # Database connection, shared enums
@@ -121,6 +139,21 @@ users               * ──── * follows           Follow relationships (wit
 users               * ──── * organizations     Org membership (via memberships table)
 organizations       1 ──── * conversations     Org channels
 users               * ──── * conversations     DMs and group chats (via conversation_members)
+```
+
+### Competitions
+```
+organizations       1 ──── * competitions      Competitions owned by orgs
+competitions        1 ──── * competition_days  Multi-day schedule structure
+competition_days    1 ──── * schedule_blocks   Sessions within a day
+competitions        1 ──── * competition_events Events (e.g. "Novice Waltz")
+competitions        * ──── * judges            Judge assignments (global directory)
+competitions        1 ──── * registrations     Per-person registration
+entries             * ──── 1 event             Couple entries (leader + follower)
+entries             1 ──── * callback_marks    Preliminary round marks
+entries             1 ──── * final_marks       Final round placements
+rounds              1 ──── * heats             Heat assignments per round
+competitions        1 ──── * feedback_forms    Post-comp feedback collection
 ```
 
 ## Design
@@ -190,6 +223,7 @@ pnpm db:seed
 | `pnpm db:push` | Push schema directly to database |
 | `pnpm db:studio` | Open Drizzle Studio (database GUI) |
 | `pnpm db:seed` | Seed database from extracted YAML |
+| `pnpm test` | Run integration tests (requires `nix develop` on NixOS) |
 
 ## Status
 
@@ -198,22 +232,26 @@ pnpm db:seed
 - [x] React Flow graph visualization (Dagre layout, edge-on-demand)
 - [x] Figure detail pages with leader/follower step data
 - [x] Routine builder with figure picker and transition validation
+- [x] Social feed with shared routines and technique articles (Tiptap editor)
+- [x] Follow system, likes, comments, notifications
+- [x] Save/bookmark system with folders
+- [x] User profiles with competition level badges
+- [x] Organizations with configurable membership (open, invite-only, request-to-join)
+- [x] Real-time messaging via Ably (DMs, group chats, org channels)
+- [x] Competition organizer — full lifecycle from creation to post-comp analytics
+- [x] Skating system scoring engine (Rules 5–11) with tabulation
+- [x] Judge tablet UI with standalone JWT auth
+- [x] Comp-day dashboards (scrutineer, registration table, deck captain, emcee)
+- [x] Real-time competition views (projector display, competitor live view)
+- [x] Results browsing, competitor history, competition calendar
+- [x] Feedback forms with analytics, payment analytics
 - [x] Clerk authentication with route protection
 - [x] Dark theme with ISTD level accent colors
 - [x] PDF extraction and database seed pipeline
 
-### In Development
-- [ ] Social feed (shared routines + blog articles)
-- [ ] WYSIWYG markdown editor (Tiptap)
-- [ ] User profiles with competition levels
-- [ ] Follow system with public/private accounts
-- [ ] Organizations (teams, clubs)
-- [ ] Real-time messaging (Ably)
-- [ ] Notifications
-- [ ] Save/bookmark system with folders
+**375 integration tests across 52 test files.**
 
 ### Future
-- [ ] Competition management (judging, scheduling, registration)
 - [ ] Photo/video media support
 - [ ] Email/push notifications
 - [ ] AI choreography assistant
@@ -221,8 +259,9 @@ pnpm db:seed
 
 ## Documentation
 
+- [`docs/comp-organizer/`](docs/comp-organizer/) — Competition organizer technical docs, schema, routers, and user guides
 - [`docs/superpowers/specs/`](docs/superpowers/specs/) — Design specifications
-- [`plans/`](plans/) — Implementation plans organized by phase
+- [`docs/testing.md`](docs/testing.md) — Test infrastructure documentation
 
 ## License
 
