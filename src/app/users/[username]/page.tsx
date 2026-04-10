@@ -53,17 +53,28 @@ export default async function UserProfilePage({
   const followerCount = followerCountRow?.count ?? 0;
   const followingCount = followingCountRow?.count ?? 0;
 
-  // Fetch partner search profile
-  const [partnerSearch] = await db
-    .select({
-      danceStyles: partnerSearchProfiles.danceStyles,
-      height: partnerSearchProfiles.height,
-      location: partnerSearchProfiles.location,
-      bio: partnerSearchProfiles.bio,
-      rolePreference: partnerSearchProfiles.rolePreference,
-    })
-    .from(partnerSearchProfiles)
-    .where(eq(partnerSearchProfiles.userId, user.id));
+  // Fetch partner search profile (table may not exist yet if migration hasn't run)
+  let partnerSearch: {
+    danceStyles: string[];
+    height: string | null;
+    location: string | null;
+    bio: string | null;
+    rolePreference: string;
+  } | undefined;
+  try {
+    [partnerSearch] = await db
+      .select({
+        danceStyles: partnerSearchProfiles.danceStyles,
+        height: partnerSearchProfiles.height,
+        location: partnerSearchProfiles.location,
+        bio: partnerSearchProfiles.bio,
+        rolePreference: partnerSearchProfiles.rolePreference,
+      })
+      .from(partnerSearchProfiles)
+      .where(eq(partnerSearchProfiles.userId, user.id));
+  } catch {
+    // Table doesn't exist yet — skip
+  }
 
   const isOwnProfile = currentUserId === user.id;
 
