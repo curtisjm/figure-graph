@@ -172,11 +172,11 @@ export default async function FigureDetailPage({
   const followerSteps = figure.followerSteps as Step[] | null;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-2 sm:gap-3">
               <Badge
                 variant="outline"
                 className={LEVEL_COLORS[figure.level]}
@@ -188,10 +188,10 @@ export default async function FigureDetailPage({
                 {figure.figureNumber != null && ` — Figure #${figure.figureNumber}`}
               </span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {figure.name}
               {figure.variantName && (
-                <span className="text-muted-foreground font-normal text-2xl ml-3">
+                <span className="text-muted-foreground font-normal text-xl ml-2 sm:text-2xl sm:ml-3">
                   ({figure.variantName})
                 </span>
               )}
@@ -204,12 +204,12 @@ export default async function FigureDetailPage({
             )}
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="sm">
               <Link href={`/dances/${danceSlug}/figures/${figureId}/graph`}>
                 Local Graph
               </Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="sm">
               <Link href={`/dances/${danceSlug}`}>Back to {dance?.displayName}</Link>
             </Button>
           </div>
