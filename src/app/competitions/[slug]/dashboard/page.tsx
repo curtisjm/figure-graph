@@ -123,7 +123,7 @@ export default function DashboardOverviewPage() {
                     }
                     statusMutation.mutate({
                       competitionId: comp.id,
-                      status: t.next as any,
+                      status: t.next as "draft" | "advertised" | "accepting_entries" | "entries_closed" | "running" | "finished",
                     });
                   }}
                 >

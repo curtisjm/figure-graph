@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { trpc } from "@shared/lib/trpc";
+import { trpc, type RouterOutput } from "@shared/lib/trpc";
+
+type CompetitionEvent = RouterOutput["event"]["listByCompetition"][number];
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
@@ -80,7 +82,7 @@ function EventRoundsCard({
   expanded,
   onToggle,
 }: {
-  event: any;
+  event: CompetitionEvent;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -121,8 +123,8 @@ function EventRoundsCard({
             </div>
           </div>
         </div>
-        <Badge variant="outline" className="text-xs">
-          {event.entryCount ?? 0} entries
+        <Badge variant="secondary" className="text-xs capitalize">
+          {event.eventType}
         </Badge>
       </div>
 
@@ -144,7 +146,7 @@ function EventRoundsCard({
             </div>
           ) : (
             <div className="space-y-2">
-              {rounds.map((round: any) => (
+              {rounds.map((round) => (
                 <div key={round.id} className="p-3 rounded-md border space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -172,7 +174,7 @@ function EventRoundsCard({
                   </div>
                   {round.heats?.length > 0 && (
                     <div className="space-y-1">
-                      {round.heats.map((heat: any, i: number) => (
+                      {round.heats.map((heat, i) => (
                         <div key={heat.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/30">
                           <span>Heat {i + 1}</span>
                           <span className="text-muted-foreground">

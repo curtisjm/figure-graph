@@ -39,7 +39,7 @@ export default function EntriesPage() {
           </CardContent>
         </Card>
       ) : (
-        eventEntries.map((event: any) => (
+        eventEntries.map((event) => (
           <Card key={event.id}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export default function EntriesPage() {
                 <p className="text-sm text-muted-foreground">No entries</p>
               ) : (
                 <div className="space-y-1">
-                  {event.entries.map((entry: any, i: number) => (
+                  {event.entries.map((entry, i) => (
                     <div
                       key={entry.id}
                       className="flex items-center justify-between py-1.5 px-2 rounded text-sm hover:bg-accent/30"
@@ -71,8 +71,8 @@ export default function EntriesPage() {
                           {entry.leaderName ?? "TBA"} & {entry.followerName ?? "TBA"}
                         </span>
                       </div>
-                      {entry.orgName && (
-                        <span className="text-xs text-muted-foreground">{entry.orgName}</span>
+                      {entry.leaderNumber != null && (
+                        <span className="text-xs text-muted-foreground">#{entry.leaderNumber}</span>
                       )}
                     </div>
                   ))}

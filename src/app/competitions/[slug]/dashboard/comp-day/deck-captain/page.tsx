@@ -312,7 +312,7 @@ function ScheduleTab({ competitionId }: { competitionId: number }) {
           <CardContent className="pb-3">
             {event.rounds?.length ? (
               <div className="space-y-1">
-                {event.rounds.map((round: any) => (
+                {event.rounds.map((round) => (
                   <div
                     key={round.id}
                     className={cn(

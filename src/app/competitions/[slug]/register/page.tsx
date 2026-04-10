@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { trpc } from "@shared/lib/trpc";
+import { trpc, type RouterOutput } from "@shared/lib/trpc";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
@@ -51,6 +51,9 @@ type EntryAssignment = {
   followerRegistrationId: number;
   partner: PartnerInfo;
 };
+
+type MyRegistration = NonNullable<RouterOutput["registration"]["getMyRegistration"]>;
+type MyRegistrationEntry = MyRegistration["entries"][number];
 
 // ── Steps ─────────────────────────────────────────────────────────
 
@@ -156,12 +159,12 @@ export default function RegisterPage() {
     comp?.status === "running" ||
     comp?.status === "finished";
 
-  const enteredEventIds = new Set(myReg?.entries?.map((e: any) => e.eventId) ?? []);
+  const enteredEventIds = new Set(myReg?.entries?.map((e) => e.eventId) ?? []);
 
   // Filter events for step 1
   const filteredEvents = useMemo(() => {
     if (!events) return [];
-    return events.filter((e: any) => {
+    return events.filter((e) => {
       if (eventSearch && !e.name.toLowerCase().includes(eventSearch.toLowerCase())) return false;
       if (styleFilter !== "all" && e.style !== styleFilter) return false;
       if (levelFilter !== "all" && e.level !== levelFilter) return false;
@@ -464,7 +467,7 @@ export default function RegisterPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Unaffiliated</SelectItem>
-                    {userOrgs.map((org: any) => (
+                    {userOrgs.map((org) => (
                       <SelectItem key={org.id} value={org.id.toString()}>
                         {org.name}
                       </SelectItem>
@@ -504,7 +507,7 @@ export default function RegisterPage() {
                   No events match your filters.
                 </p>
               ) : (
-                filteredEvents.map((event: any) => {
+                filteredEvents.map((event) => {
                   const alreadyEntered = enteredEventIds.has(event.id);
                   const isSelected = selectedEventIds.includes(event.id);
                   return (
@@ -645,7 +648,7 @@ export default function RegisterPage() {
               <label className="text-sm font-medium">Event assignments</label>
               <div className="space-y-1">
                 {selectedEventIds.map((eventId) => {
-                  const event = events?.find((e: any) => e.id === eventId);
+                  const event = events?.find((e) => e.id === eventId);
                   if (!event) return null;
                   const partner = getPartnerForEvent(eventId);
                   const role = getRoleForEvent(eventId);
@@ -779,7 +782,7 @@ export default function RegisterPage() {
 
             <div className="space-y-2">
               {entryAssignments.map((a) => {
-                const event = events?.find((e: any) => e.id === a.eventId);
+                const event = events?.find((e) => e.id === a.eventId);
                 if (!event) return null;
                 const role = getRoleForEvent(a.eventId);
                 return (
@@ -836,7 +839,7 @@ export default function RegisterPage() {
 
 // ── Sub-components ──────────────────────────────────────────────
 
-function RegistrationInfoCard({ reg }: { reg: any }) {
+function RegistrationInfoCard({ reg }: { reg: MyRegistration }) {
   return (
     <Card>
       <CardHeader>
@@ -864,7 +867,7 @@ function RegistrationInfoCard({ reg }: { reg: any }) {
   );
 }
 
-function PaymentCard({ reg }: { reg: any }) {
+function PaymentCard({ reg }: { reg: MyRegistration }) {
   return (
     <Card>
       <CardHeader>
@@ -891,7 +894,7 @@ function EntriesList({
   onRemove,
   onPartnerClick,
 }: {
-  entries: any[];
+  entries: MyRegistrationEntry[];
   myRegId: number;
   canRemove: boolean;
   onRemove: (entryId: number) => void;
@@ -907,7 +910,7 @@ function EntriesList({
 
   return (
     <div className="space-y-2">
-      {entries.map((entry: any) => {
+      {entries.map((entry) => {
         // Determine which side is "me" and which is the partner
         const isLeader = entry.leaderRegistrationId === myRegId;
         const partnerName = isLeader ? entry.followerDisplayName : entry.leaderDisplayName;

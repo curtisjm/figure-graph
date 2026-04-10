@@ -5,7 +5,17 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "@shared/lib/trpc";
+import { trpc, type RouterOutput } from "@shared/lib/trpc";
+
+// getBySlug doesn't include all competition fields; this type covers fields used in settings forms
+type CompetitionSettings = RouterOutput["competition"]["getBySlug"] & {
+  maxFinalSize?: number | null;
+  maxHeatSize?: number | null;
+  minutesPerCouplePerDance?: string | null;
+  transitionMinutes?: string | null;
+  numberStart?: number;
+  compCode?: string | null;
+};
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Textarea } from "@shared/ui/textarea";
@@ -153,10 +163,10 @@ export default function SettingsPage() {
   useEffect(() => {
     if (comp) {
       scoringForm.reset({
-        maxFinalSize: (comp as any).maxFinalSize ?? null,
-        maxHeatSize: (comp as any).maxHeatSize ?? null,
-        minutesPerCouplePerDance: (comp as any).minutesPerCouplePerDance ?? "1.5",
-        transitionMinutes: (comp as any).transitionMinutes ?? "2.0",
+        maxFinalSize: (comp as CompetitionSettings).maxFinalSize ?? null,
+        maxHeatSize: (comp as CompetitionSettings).maxHeatSize ?? null,
+        minutesPerCouplePerDance: (comp as CompetitionSettings).minutesPerCouplePerDance ?? "1.5",
+        transitionMinutes: (comp as CompetitionSettings).transitionMinutes ?? "2.0",
       });
     }
   }, [comp]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -183,7 +193,7 @@ export default function SettingsPage() {
     if (comp) {
       pricingForm.reset({
         baseFee: comp.baseFee ?? "0",
-        numberStart: (comp as any).numberStart ?? 1,
+        numberStart: (comp as CompetitionSettings).numberStart ?? 1,
       });
     }
   }, [comp]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -203,7 +213,7 @@ export default function SettingsPage() {
   const [masterPassword, setMasterPassword] = useState("");
 
   useEffect(() => {
-    if (comp) setCompCode((comp as any).compCode ?? "");
+    if (comp) setCompCode((comp as CompetitionSettings).compCode ?? "");
   }, [comp]);
 
   const compCodeMutation = trpc.competition.setCompCode.useMutation({

@@ -85,10 +85,10 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {stats!.entriesPerEvent.map((e: any) => (
+              {stats!.entriesPerEvent.map((e) => (
                 <div key={e.eventId} className="flex items-center justify-between text-sm">
                   <span>{e.eventName}</span>
-                  <Badge variant="secondary" className="text-xs">{e.count}</Badge>
+                  <Badge variant="secondary" className="text-xs">{e.entryCount}</Badge>
                 </div>
               ))}
             </div>
@@ -104,9 +104,9 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {stats!.registrationsByOrg.map((o: any) => (
-                <div key={o.orgName ?? "unaffiliated"} className="flex items-center justify-between text-sm">
-                  <span>{o.orgName ?? "Unaffiliated"}</span>
+              {stats!.registrationsByOrg.map((o) => (
+                <div key={o.orgId ?? "unaffiliated"} className="flex items-center justify-between text-sm">
+                  <span>{o.orgId ? `Org #${o.orgId}` : "Unaffiliated"}</span>
                   <Badge variant="secondary" className="text-xs">{o.count}</Badge>
                 </div>
               ))}
@@ -155,7 +155,7 @@ export default function StatsPage() {
               {awards.perEvent?.length > 0 && (
                 <div className="space-y-1">
                   <h4 className="text-sm font-medium">Per Event</h4>
-                  {awards.perEvent.map((e: any) => (
+                  {awards.perEvent.map((e) => (
                     <div key={e.eventId} className="flex items-center justify-between text-xs p-1.5 rounded border">
                       <span>{e.eventName}</span>
                       <div className="flex gap-2">

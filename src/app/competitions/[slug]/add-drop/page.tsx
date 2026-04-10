@@ -111,7 +111,7 @@ export default function AddDropPage() {
 
     submitRequest.mutate({
       competitionId: comp.id,
-      type: requestType as any,
+      type: requestType as "add" | "drop",
       eventId: Number(selectedEventId),
       leaderRegistrationId: myRole === "leader" ? myReg.id : partnerRegId,
       followerRegistrationId: myRole === "follower" ? myReg.id : partnerRegId,
@@ -152,7 +152,7 @@ export default function AddDropPage() {
 
       {myRequests?.length ? (
         <div className="space-y-2">
-          {myRequests.map((req: any) => (
+          {myRequests.map((req) => (
             <Card key={req.id}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
@@ -161,7 +161,7 @@ export default function AddDropPage() {
                       <Badge variant={req.type === "add" ? "default" : "destructive"} className="text-xs">
                         {req.type === "add" ? "Add" : "Drop"}
                       </Badge>
-                      <span className="text-sm font-medium">{req.eventName ?? `Event #${req.eventId}`}</span>
+                      <span className="text-sm font-medium">{events?.find((e) => e.id === req.eventId)?.name ?? `Event #${req.eventId}`}</span>
                     </div>
                     {req.reason && (
                       <p className="text-xs text-muted-foreground">{req.reason}</p>
@@ -210,7 +210,7 @@ export default function AddDropPage() {
                   <SelectValue placeholder="Select event" />
                 </SelectTrigger>
                 <SelectContent>
-                  {events?.map((event: any) => (
+                  {events?.map((event) => (
                     <SelectItem key={event.id} value={event.id.toString()}>
                       {event.name}
                     </SelectItem>

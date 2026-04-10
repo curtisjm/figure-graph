@@ -81,7 +81,7 @@ export default function TeamMatchPage() {
 
       {submissions?.length ? (
         <div className="space-y-2">
-          {submissions.map((sub: any) => (
+          {submissions.map((sub) => (
             <Card key={sub.id}>
               <CardContent className="py-4">
                 <div className="flex items-start justify-between gap-4">
@@ -94,16 +94,14 @@ export default function TeamMatchPage() {
                       {new Date(sub.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  {sub.isOwner && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7 text-destructive shrink-0"
-                      onClick={() => deleteMutation.mutate({ submissionId: sub.id })}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-destructive shrink-0"
+                    onClick={() => deleteMutation.mutate({ submissionId: sub.id })}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

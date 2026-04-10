@@ -272,26 +272,26 @@ function MarksView({
                 </TableHeader>
                 <TableBody>
                   {rows.map((row) => {
-                    const data = row.tableData as Record<string, unknown> | null;
+                    const data = row.tableData as { coupleNumber?: number; marks?: Record<string, unknown>; placement?: number } | null;
 
                     return (
                       <TableRow key={row.entryId}>
                         <TableCell className="tabular-nums font-medium">
-                          {(data as any)?.coupleNumber ?? row.entryId}
+                          {data?.coupleNumber ?? row.entryId}
                         </TableCell>
                         {judges.map((j) => {
-                          const mark = (data as any)?.marks?.[j.id];
+                          const mark = data?.marks?.[j.id];
                           return (
                             <TableCell
                               key={j.id}
                               className="text-center tabular-nums text-sm"
                             >
-                              {mark ?? "—"}
+                              {mark != null ? String(mark) : "—"}
                             </TableCell>
                           );
                         })}
                         <TableCell className="text-center tabular-nums font-bold">
-                          {(data as any)?.placement ?? "—"}
+                          {data?.placement ?? "—"}
                         </TableCell>
                       </TableRow>
                     );

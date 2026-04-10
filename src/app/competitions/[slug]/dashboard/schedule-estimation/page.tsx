@@ -92,16 +92,16 @@ export default function ScheduleEstimationPage() {
           No schedule to estimate. Set up the schedule first.
         </div>
       ) : (
-        schedule.schedule.map((day: any) => (
-          <Card key={day.id}>
+        schedule.schedule.map((day) => (
+          <Card key={day.dayId}>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
                 {day.label ?? "Day"} {day.date && <span className="text-muted-foreground font-normal ml-2">{day.date}</span>}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {day.blocks?.map((block: any) => (
-                <div key={block.id} className="mb-4 last:mb-0">
+              {day.blocks?.map((block) => (
+                <div key={block.blockId} className="mb-4 last:mb-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium">{block.label}</span>
                     <Badge variant="outline" className="text-xs">
@@ -115,18 +115,18 @@ export default function ScheduleEstimationPage() {
                   </div>
                   {block.events?.length > 0 && (
                     <div className="space-y-1 ml-4">
-                      {block.events.map((event: any) => (
+                      {block.events.map((event) => (
                         <div
-                          key={event.id}
+                          key={event.eventId}
                           className="flex items-center justify-between text-xs p-1.5 rounded border"
                         >
                           <div className="flex items-center gap-2">
                             <Clock className="size-3 text-muted-foreground" />
-                            <span>{event.name}</span>
+                            <span>{event.eventName}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground">
-                              {event.hasOverride ? `${event.estimatedMinutes} min (override)` : `~${Math.round(event.estimatedMinutes ?? 0)} min`}
+                              ~{Math.round(event.estimatedMinutes ?? 0)} min
                             </span>
                           </div>
                         </div>

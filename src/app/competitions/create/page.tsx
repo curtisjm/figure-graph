@@ -416,7 +416,7 @@ export default function CreateCompetitionPage() {
                   onClick={() => {
                     generateEvents.mutate({
                       competitionId: createdComp.id,
-                      styles: selectedStyles as any,
+                      styles: selectedStyles as (typeof styles)[number][],
                     });
                   }}
                   disabled={

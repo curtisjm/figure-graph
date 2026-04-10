@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { trpc } from "@shared/lib/trpc";
+import type { RouterOutput } from "@shared/lib/trpc";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
@@ -134,15 +135,15 @@ export default function AddDropManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {resolved.map((req: any) => (
+              {resolved.map((req) => (
                 <div key={req.id} className="flex items-center justify-between p-2 rounded-md border opacity-60">
                   <div className="flex items-center gap-2">
                     <Badge variant={req.type === "add" ? "default" : "destructive"} className="text-xs">
                       {req.type}
                     </Badge>
-                    <span className="text-sm">{req.eventName ?? `Event #${req.eventId}`}</span>
+                    <span className="text-sm">{`Event #${req.eventId}`}</span>
                     <span className="text-xs text-muted-foreground">
-                      — {req.leaderName ?? "Unknown"}
+                      Reg #{req.leaderRegistrationId}
                     </span>
                   </div>
                   <Badge
@@ -167,24 +168,24 @@ function RequestList({
   onReject,
   isPending,
 }: {
-  requests: any[];
+  requests: RouterOutput["addDrop"]["listByCompetition"]["safe"];
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
   isPending: boolean;
 }) {
   return (
     <div className="space-y-2">
-      {requests.map((req: any) => (
+      {requests.map((req) => (
         <div key={req.id} className="flex items-center justify-between p-3 rounded-md border">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Badge variant={req.type === "add" ? "default" : "destructive"} className="text-xs">
                 {req.type}
               </Badge>
-              <span className="text-sm font-medium">{req.eventName ?? `Event #${req.eventId}`}</span>
+              <span className="text-sm font-medium">{`Event #${req.eventId}`}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {req.leaderName ?? "Unknown"} & {req.followerName ?? "Unknown"}
+              Reg #{req.leaderRegistrationId} & #{req.followerRegistrationId}
               {req.reason && ` — "${req.reason}"`}
             </p>
           </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { trpc } from "@shared/lib/trpc";
+import { trpc, type RouterOutput } from "@shared/lib/trpc";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@shared/ui/select";
 import { toast } from "sonner";
+
+type RegistrationListItem = RouterOutput["registration"]["listByCompetition"][number];
 import { CheckCircle2, Circle, DollarSign, Eye } from "lucide-react";
 
 export default function RegistrationsPage() {
@@ -64,7 +66,7 @@ export default function RegistrationsPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  const [paymentReg, setPaymentReg] = useState<any>(null);
+  const [paymentReg, setPaymentReg] = useState<RegistrationListItem | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<string>("cash");
   const [payNote, setPayNote] = useState("");
@@ -92,7 +94,7 @@ export default function RegistrationsPage() {
         <h2 className="text-lg font-semibold">
           Registrations ({registrations?.length ?? 0})
         </h2>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
           <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>
@@ -111,7 +113,7 @@ export default function RegistrationsPage() {
         </div>
       ) : (
         <div className="space-y-1">
-          {registrations.map((reg: any) => (
+          {registrations.map((reg) => (
             <div
               key={reg.id}
               className="flex items-center justify-between p-3 rounded-md border hover:bg-accent/30 transition-colors"
@@ -143,8 +145,6 @@ export default function RegistrationsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{reg.entryCount ?? 0} entries</span>
-                    <span>·</span>
                     <span className={reg.amountOwed > reg.totalPaid ? "text-yellow-600" : "text-green-600"}>
                       ${reg.totalPaid ?? "0"} / ${reg.amountOwed ?? "0"}
                     </span>
@@ -226,7 +226,7 @@ export default function RegistrationsPage() {
                   recordManual.mutate({
                     registrationId: paymentReg.id,
                     amount: payAmount,
-                    method: payMethod as any,
+                    method: payMethod as "cash" | "check" | "other",
                     note: payNote || undefined,
                   });
                 }
@@ -249,14 +249,14 @@ export default function RegistrationsPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Competitor</p>
-                <p className="font-medium">{(regDetail as any).displayName ?? (regDetail as any).username}</p>
+                <p className="font-medium">{regDetail.user?.displayName ?? regDetail.user?.username}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Entries ({regDetail.entries?.length ?? 0})</p>
                 <div className="space-y-1 mt-1">
-                  {regDetail.entries?.map((entry: any) => (
+                  {regDetail.entries?.map((entry) => (
                     <div key={entry.id} className="text-sm flex items-center gap-2">
-                      <span>{entry.eventName ?? `Event #${entry.eventId}`}</span>
+                      <span>{`Event #${entry.eventId}`}</span>
                       {entry.scratched && <Badge variant="destructive" className="text-xs">Scratched</Badge>}
                     </div>
                   ))}
@@ -266,7 +266,7 @@ export default function RegistrationsPage() {
                 <p className="text-sm text-muted-foreground">Payments</p>
                 <div className="space-y-1 mt-1">
                   {regDetail.payments?.length ? (
-                    regDetail.payments.map((p: any) => (
+                    regDetail.payments.map((p) => (
                       <div key={p.id} className="text-sm flex items-center justify-between">
                         <span className="capitalize">{p.method}</span>
                         <span>${p.amount}</span>

@@ -42,9 +42,9 @@ export default function TBAPage() {
   const { data: listings, isLoading, refetch } = trpc.tba.listByCompetition.useQuery(
     {
       competitionId: comp?.id ?? 0,
-      style: (filterStyle || undefined) as any,
-      level: (filterLevel || undefined) as any,
-      role: (filterRole || undefined) as any,
+      style: (filterStyle || undefined) as (typeof styles)[number] | undefined,
+      level: (filterLevel || undefined) as (typeof levels)[number] | undefined,
+      role: (filterRole || undefined) as "leader" | "follower" | undefined,
     },
     { enabled: !!comp },
   );
@@ -138,7 +138,7 @@ export default function TBAPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {listings.map((listing: any) => (
+          {listings.map((listing) => (
             <Card key={listing.id}>
               <CardContent className="py-4">
                 <div className="flex items-start justify-between">
@@ -163,16 +163,14 @@ export default function TBAPage() {
                       <p className="text-sm text-muted-foreground mt-1">{listing.notes}</p>
                     )}
                   </div>
-                  {listing.isOwner && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7 text-destructive"
-                      onClick={() => deleteListing.mutate({ listingId: listing.id })}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-destructive"
+                    onClick={() => deleteListing.mutate({ listingId: listing.id })}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -236,9 +234,9 @@ export default function TBAPage() {
               onClick={() => {
                 createListing.mutate({
                   competitionId: comp.id,
-                  style: newStyle as any,
-                  level: newLevel as any,
-                  role: newRole as any,
+                  style: newStyle as (typeof styles)[number],
+                  level: newLevel as (typeof levels)[number],
+                  role: newRole as "leader" | "follower",
                   notes: newNotes || undefined,
                 });
               }}

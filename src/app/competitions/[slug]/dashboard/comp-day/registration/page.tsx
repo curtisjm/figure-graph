@@ -66,7 +66,7 @@ export default function RegistrationTablePage() {
   // State
   const [search, setSearch] = useState("");
   const [addDropOpen, setAddDropOpen] = useState(false);
-  const [paymentReg, setPaymentReg] = useState<any>(null);
+  const [paymentReg, setPaymentReg] = useState<{ id: number; displayName: string | null; competitorNumber: number | null } | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<"cash" | "check" | "other">(
     "cash",
@@ -482,7 +482,7 @@ export default function RegistrationTablePage() {
                   <p className="text-sm text-muted-foreground">No entries</p>
                 ) : (
                   <div className="space-y-1">
-                    {regDetail.entries.map((entry: any) => (
+                    {regDetail.entries.map((entry) => (
                       <div
                         key={entry.id}
                         className="flex items-center justify-between text-sm rounded-md border px-3 py-1.5"
@@ -510,7 +510,7 @@ export default function RegistrationTablePage() {
                   </p>
                 ) : (
                   <div className="space-y-1">
-                    {regDetail.payments.map((p: any) => (
+                    {regDetail.payments.map((p) => (
                       <div
                         key={p.id}
                         className="flex items-center justify-between text-sm rounded-md border px-3 py-1.5"
@@ -528,7 +528,7 @@ export default function RegistrationTablePage() {
                 <div>
                   <p className="text-sm font-medium mb-2">Add/Drop Requests</p>
                   <div className="space-y-1">
-                    {regDetail.addDropRequests.map((r: any) => (
+                    {regDetail.addDropRequests.map((r) => (
                       <div
                         key={r.id}
                         className="flex items-center justify-between text-sm rounded-md border px-3 py-1.5"
@@ -563,7 +563,7 @@ export default function RegistrationTablePage() {
                   Paid: $
                   {regDetail.payments
                     .reduce(
-                      (sum: number, p: any) => sum + parseFloat(p.amount),
+                      (sum, p) => sum + parseFloat(p.amount),
                       0,
                     )
                     .toFixed(2)}
@@ -596,7 +596,7 @@ export default function RegistrationTablePage() {
                     Safe to approve ({pendingAddDrops.safe.length})
                   </p>
                   <div className="space-y-2">
-                    {pendingAddDrops.safe.map((req: any) => (
+                    {pendingAddDrops.safe.map((req) => (
                       <div
                         key={req.id}
                         className="flex items-center justify-between rounded-md border px-3 py-2"
@@ -645,7 +645,7 @@ export default function RegistrationTablePage() {
                     Needs review ({pendingAddDrops.needsReview.length})
                   </p>
                   <div className="space-y-2">
-                    {pendingAddDrops.needsReview.map((req: any) => (
+                    {pendingAddDrops.needsReview.map((req) => (
                       <div
                         key={req.id}
                         className="flex items-center justify-between rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/30 px-3 py-2"

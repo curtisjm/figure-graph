@@ -79,8 +79,8 @@ export default function NumbersPage() {
     );
   }
 
-  const assigned = assignments?.filter((a: any) => a.competitorNumber) ?? [];
-  const unassigned = assignments?.filter((a: any) => !a.competitorNumber) ?? [];
+  const assigned = assignments?.filter((a) => a.competitorNumber) ?? [];
+  const unassigned = assignments?.filter((a) => !a.competitorNumber) ?? [];
 
   return (
     <div className="space-y-6">
@@ -114,7 +114,7 @@ export default function NumbersPage() {
             </p>
           ) : (
             <div className="space-y-1">
-              {assigned.map((a: any) => (
+              {assigned.map((a) => (
                 <div key={a.registrationId} className="flex items-center justify-between p-2 rounded-md border">
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className="font-mono font-bold">
@@ -128,7 +128,7 @@ export default function NumbersPage() {
                       size="icon"
                       className="size-7"
                       onClick={() => {
-                        setEditingReg({ id: a.registrationId, name: a.displayName ?? a.username });
+                        setEditingReg({ id: a.registrationId, name: a.displayName ?? a.username ?? "Unknown" });
                         setManualNumber(String(a.competitorNumber));
                       }}
                     >
@@ -158,14 +158,14 @@ export default function NumbersPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              {unassigned.map((a: any) => (
+              {unassigned.map((a) => (
                 <div key={a.registrationId} className="flex items-center justify-between p-2 rounded-md border">
                   <span className="text-sm">{a.displayName ?? a.username}</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setEditingReg({ id: a.registrationId, name: a.displayName ?? a.username });
+                      setEditingReg({ id: a.registrationId, name: a.displayName ?? a.username ?? "Unknown" });
                       setManualNumber("");
                     }}
                   >

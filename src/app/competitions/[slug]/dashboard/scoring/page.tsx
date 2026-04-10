@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { trpc } from "@shared/lib/trpc";
+import { trpc, type RouterOutput } from "@shared/lib/trpc";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
@@ -28,6 +28,8 @@ import {
   Loader2,
   SkipForward,
 } from "lucide-react";
+
+type CompetitionEvent = RouterOutput["event"]["listByCompetition"][number];
 
 export default function ScoringPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -234,7 +236,7 @@ function EventScoringCard({
   event,
   onSelectRound,
 }: {
-  event: any;
+  event: CompetitionEvent;
   onSelectRound: (roundId: number) => void;
 }) {
   const { data: rounds } = trpc.round.listByEvent.useQuery({ eventId: event.id });
@@ -254,7 +256,7 @@ function EventScoringCard({
           <p className="text-sm text-muted-foreground">No rounds generated</p>
         ) : (
           <div className="space-y-1">
-            {rounds.map((round: any) => (
+            {rounds.map((round) => (
               <div
                 key={round.id}
                 className="flex items-center justify-between p-2 rounded-md border hover:bg-accent/30 cursor-pointer transition-colors"
@@ -428,7 +430,7 @@ function RoundDetailDialog({
         {results?.callbacks?.length ? (
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Callback Results</h3>
-            {results.callbacks.map((r: any) => (
+            {results.callbacks.map((r) => (
               <div
                 key={r.entryId}
                 className={`flex items-center justify-between text-sm p-2 rounded-md ${
@@ -450,8 +452,8 @@ function RoundDetailDialog({
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Final Placements</h3>
             {results.results
-              .filter((r: any) => !r.danceName) // Overall results
-              .map((r: any) => (
+              .filter((r) => !r.danceName) // Overall results
+              .map((r) => (
                 <div
                   key={r.entryId}
                   className={`flex items-center justify-between text-sm p-2 rounded-md ${
@@ -468,13 +470,13 @@ function RoundDetailDialog({
                 </div>
               ))}
             {/* Per-dance results if multi-dance */}
-            {results.results.some((r: any) => r.danceName) && (
+            {results.results.some((r) => r.danceName) && (
               <>
                 <Separator />
                 <h4 className="text-xs font-medium text-muted-foreground">Per-Dance Breakdown</h4>
                 {results.results
-                  .filter((r: any) => r.danceName)
-                  .map((r: any, i: number) => (
+                  .filter((r) => r.danceName)
+                  .map((r, i) => (
                     <div key={i} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/20">
                       <span>{r.danceName}</span>
                       <span>Entry #{r.entryId}: {r.placement}</span>
@@ -499,7 +501,7 @@ function RoundDetailDialog({
                   </tr>
                 </thead>
                 <tbody>
-                  {results.tabulation.map((row: any, i: number) => (
+                  {results.tabulation.map((row, i) => (
                     <tr key={i} className="border-b">
                       <td className="p-1">#{row.entryId}</td>
                       <td className="p-1 text-muted-foreground">{row.danceName ?? "Overall"}</td>
@@ -530,7 +532,7 @@ function RoundDetailDialog({
             {corrections.length === 0 ? (
               <p className="text-sm text-muted-foreground">No corrections recorded</p>
             ) : (
-              corrections.map((c: any) => (
+              corrections.map((c) => (
                 <div key={c.id} className="text-xs p-2 rounded bg-muted/30 space-y-0.5">
                   <div className="flex justify-between">
                     <span className="font-medium">{c.judgeName}</span>

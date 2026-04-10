@@ -163,7 +163,7 @@ export default function StaffPage() {
                         removeStaff.mutate({
                           competitionId: comp.id,
                           userId: member.userId,
-                          role: role as any,
+                          role: role as (typeof staffRoles)[number] | "judge",
                         });
                       }
                     }}
@@ -264,7 +264,7 @@ export default function StaffPage() {
                   assignStaff.mutate({
                     competitionId: comp.id,
                     userId: selectedUserId,
-                    role: selectedRole as any,
+                    role: selectedRole as (typeof staffRoles)[number] | "judge",
                   });
                 }
               }}

@@ -265,7 +265,7 @@ export default function EventsPage() {
               onClick={() => {
                 generateDefaults.mutate({
                   competitionId: comp.id,
-                  styles: selectedStyles as any,
+                  styles: selectedStyles as (typeof styles)[number][],
                 });
               }}
               disabled={generateDefaults.isPending || selectedStyles.length === 0}
