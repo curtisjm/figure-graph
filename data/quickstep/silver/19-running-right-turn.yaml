@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Running Right Turn
 figure_number: 19
+turn_direction: natural
 follow:
   associate: null
   fellow:

@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Reverse Turn
 figure_number: 4
+turn_direction: reverse
 follow:
   associate:
   - Three Step — Change of Direction — overturned 1-4 Reverse Turn, check and Basic Weave

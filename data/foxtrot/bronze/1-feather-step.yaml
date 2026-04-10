@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Feather Step
 figure_number: 1
+turn_direction: null
 follow:
   associate:
   - Three Step — Reverse Turn — 1-4 Reverse Turn check and Basic Weave — Change of Direction

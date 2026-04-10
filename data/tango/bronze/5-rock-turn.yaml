@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Rock Turn
 figure_number: 5
+turn_direction: null
 follow:
   associate:
   - As for Closed Promenade

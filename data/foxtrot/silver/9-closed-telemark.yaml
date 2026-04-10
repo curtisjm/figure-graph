@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Closed Telemark
 figure_number: 9
+turn_direction: reverse
 follow:
   associate: []
   fellow:

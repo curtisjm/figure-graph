@@ -2,6 +2,7 @@ _source_pdf_page: 10
 dance: waltz
 figure_name: Chassé from PP
 figure_number: 6
+turn_direction: null
 follow:
   associate:
   - Any Natural figure

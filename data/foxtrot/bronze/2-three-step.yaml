@@ -2,6 +2,7 @@ _source_pdf_page: 25
 dance: foxtrot
 figure_name: Three Step
 figure_number: 2
+turn_direction: null
 follow:
   associate: []
   fellow: []

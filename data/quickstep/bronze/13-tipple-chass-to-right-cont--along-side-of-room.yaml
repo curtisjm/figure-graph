@@ -2,6 +2,7 @@ _source_pdf_page: 43
 dance: quickstep
 figure_name: Tipple Chassé to Right (Cont)
 figure_number: 13
+turn_direction: null
 follow:
   associate:
   - As for Forward Lock

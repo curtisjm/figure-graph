@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Natural Turn to Right
 figure_number: 2
+turn_direction: natural
 follow:
   associate:
   - Any Natural Figure

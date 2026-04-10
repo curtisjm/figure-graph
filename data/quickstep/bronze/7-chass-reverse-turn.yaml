@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Chassé Reverse Turn
 figure_number: 7
+turn_direction: reverse
 follow:
   associate:
   - Progressive Chassé

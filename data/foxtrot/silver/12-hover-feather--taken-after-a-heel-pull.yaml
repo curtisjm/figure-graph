@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Hover Feather
 figure_number: 12
+turn_direction: null
 follow:
   associate: []
   fellow: []

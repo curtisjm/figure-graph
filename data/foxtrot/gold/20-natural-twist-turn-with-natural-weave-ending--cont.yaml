@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Natural Twist Turn with Natural Weave Ending
 figure_number: 20
+turn_direction: natural
 follow:
   associate: []
   fellow:

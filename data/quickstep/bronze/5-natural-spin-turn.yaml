@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Natural Spin Turn
 figure_number: 5
+turn_direction: natural
 follow:
   associate:
   - Any Natural figure — Overturned on the Pivot

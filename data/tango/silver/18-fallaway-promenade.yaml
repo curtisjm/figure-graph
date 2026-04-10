@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Fallaway Promenade
 figure_number: 18
+turn_direction: null
 follow:
   associate: []
   fellow:

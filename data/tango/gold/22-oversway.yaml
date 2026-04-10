@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Oversway
 figure_number: 22
+turn_direction: null
 follow:
   associate: []
   fellow: []

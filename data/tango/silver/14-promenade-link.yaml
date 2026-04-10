@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Promenade Link
 figure_number: 14
+turn_direction: null
 follow:
   associate: []
   fellow: []

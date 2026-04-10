@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Natural Turn with Hesitation
 figure_number: 3
+turn_direction: natural
 follow:
   associate:
   - Chassé Reverse Turn

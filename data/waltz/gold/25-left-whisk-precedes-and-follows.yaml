@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: LEFT WHISK - Precedes and Follows
 figure_number: 25
+turn_direction: null
 follow:
   associate: []
   fellow:

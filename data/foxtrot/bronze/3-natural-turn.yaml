@@ -2,6 +2,7 @@ _source_pdf_page: 25
 dance: foxtrot
 figure_name: Natural Turn
 figure_number: 3
+turn_direction: natural
 follow:
   associate:
   - A Feather Step. At corner

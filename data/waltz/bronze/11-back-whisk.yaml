@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Back Whisk
 figure_number: 11
+turn_direction: null
 follow:
   associate:
   - As for Whisk

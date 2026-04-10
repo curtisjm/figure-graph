@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Hover Corté
 figure_number: 27
+turn_direction: reverse
 follow:
   associate: []
   fellow:

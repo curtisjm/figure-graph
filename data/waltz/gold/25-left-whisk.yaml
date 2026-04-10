@@ -2,6 +2,7 @@ _source_pdf_page: 20
 dance: waltz
 figure_name: Left Whisk
 figure_number: 25
+turn_direction: null
 follow:
   associate: []
   fellow: []

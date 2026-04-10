@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: The Fallaway Whisk
 figure_number: null
+turn_direction: null
 follow:
   associate: []
   fellow: []

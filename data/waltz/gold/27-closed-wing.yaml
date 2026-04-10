@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Closed Wing
 figure_number: 27
+turn_direction: null
 follow:
   associate: []
   fellow:

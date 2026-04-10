@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Hover Telemark
 figure_number: 13
+turn_direction: reverse
 follow:
   associate: []
   fellow:

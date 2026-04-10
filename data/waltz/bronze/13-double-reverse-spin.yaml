@@ -3,6 +3,7 @@ beat_value: 1, ⅜, ⅛, ⅜
 dance: waltz
 figure_name: DOUBLE REVERSE SPIN
 figure_number: 13
+turn_direction: reverse
 follow:
   associate:
   - If ended DW — LF Closed Change — Whisk

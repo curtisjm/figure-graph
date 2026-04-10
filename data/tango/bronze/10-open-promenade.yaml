@@ -3,6 +3,7 @@ beat_value: Just under ¼ to L between 2-3
 dance: tango
 figure_name: Open Promenade
 figure_number: 10
+turn_direction: null
 follow:
   associate:
   - Follow by moving forward, back or to side. Forward into:—

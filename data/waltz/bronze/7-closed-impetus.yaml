@@ -2,6 +2,7 @@ _source_pdf_page: 10
 dance: waltz
 figure_name: Closed Impetus
 figure_number: 7
+turn_direction: natural
 follow:
   associate:
   - 4-6 Reverse Turn

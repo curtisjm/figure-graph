@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Outside Change Ended in PP
 figure_number: 9
+turn_direction: reverse
 follow:
   associate:
   - Chase from PP

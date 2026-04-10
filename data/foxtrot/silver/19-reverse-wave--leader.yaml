@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Reverse Wave
 figure_number: 19
+turn_direction: reverse
 follow:
   associate: []
   fellow:

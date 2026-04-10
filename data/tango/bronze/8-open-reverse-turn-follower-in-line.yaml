@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Open Reverse Turn, Follower in Line
 figure_number: 8
+turn_direction: reverse
 follow:
   associate:
   - As for Open Reverse Turn, Follower Outside

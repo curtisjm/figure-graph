@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Weave from PP
 figure_number: 17
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

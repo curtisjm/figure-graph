@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Reverse Turn
 figure_number: 3
+turn_direction: reverse
 follow:
   associate:
   - LF Closed Change — Whisk — Double Reverse Spin — Progressive Chassé to R — 1-6 or 4-6 Reverse Turn ended DC after underturned

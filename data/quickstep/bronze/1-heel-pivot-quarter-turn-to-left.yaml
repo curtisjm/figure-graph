@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Heel Pivot (Quarter Turn to Left)
 figure_number: 1
+turn_direction: reverse
 follow:
   associate:
   - Any Natural figure — Cross Chassé — Change of Direction. If Heel Pivot is ended DC rather underturned Natural Spin Turn

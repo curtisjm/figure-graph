@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Natural Spin Turn
 figure_number: 4
+turn_direction: natural
 follow:
   associate:
   - 4-6 Reverse Turn — Reverse Corté — Reverse Pivot.

@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Progressive Side Step
 figure_number: 2
+turn_direction: null
 follow:
   associate:
   - Walk on RF — Rock Turn.

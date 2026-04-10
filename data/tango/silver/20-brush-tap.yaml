@@ -3,6 +3,7 @@ beat_value: ½, ¼, ¼, 1
 dance: tango
 figure_name: Brush Tap
 figure_number: 20
+turn_direction: null
 follow:
   associate: null
   fellow:

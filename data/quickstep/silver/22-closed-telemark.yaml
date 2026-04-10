@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: CLOSED TELEMARK
 figure_number: 22
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

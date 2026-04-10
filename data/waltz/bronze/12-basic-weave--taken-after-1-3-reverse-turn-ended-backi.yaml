@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: BASIC WEAVE
 figure_number: 12
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

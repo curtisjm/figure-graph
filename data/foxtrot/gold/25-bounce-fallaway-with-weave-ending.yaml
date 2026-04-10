@@ -3,6 +3,7 @@ beat_value: 1½, ½, 1, 1, 1, 1, 1, 1, 2
 dance: foxtrot
 figure_name: Bounce Fallaway with Weave Ending
 figure_number: 25
+turn_direction: reverse
 follow:
   associate: []
   fellow:

@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Open Reverse Turn, Follower Outside
 figure_number: 6
+turn_direction: reverse
 follow:
   associate:
   - Walk on RF — Progressive Side Step — Progressive Link — Back Corté — LF Rock — any Promenade figure, see 'Methods of preceding

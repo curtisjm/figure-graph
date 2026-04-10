@@ -2,6 +2,7 @@ _source_pdf_page: 20
 dance: waltz
 figure_name: Turning Lock
 figure_number: 24
+turn_direction: reverse
 follow:
   associate: []
   fellow:

@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Contra Check
 figure_number: 26
+turn_direction: null
 follow:
   associate: []
   fellow:

@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Drag Hesitation
 figure_number: null
+turn_direction: reverse
 follow:
   associate:
   - 4-6 of Natural Turn — Back Whisk — Back Lock — Closed or Open Impetus — underturned Outside Spin turning ⅛.

@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: The Tango Walk
 figure_number: null
+turn_direction: null
 follow: {}
 follower:
   cbm: null

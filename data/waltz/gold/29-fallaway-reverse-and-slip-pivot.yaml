@@ -2,6 +2,7 @@ _source_pdf_page: 22
 dance: waltz
 figure_name: Fallaway Reverse and Slip Pivot
 figure_number: 29
+turn_direction: reverse
 follow:
   associate: []
   fellow:

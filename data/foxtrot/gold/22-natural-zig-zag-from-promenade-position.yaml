@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Natural Zig-Zag from Promenade Position
 figure_number: 22
+turn_direction: natural
 follow:
   associate: []
   fellow:

@@ -3,6 +3,7 @@ beat_value: ½, ½, 1, ½, ½, 1 or ½, ¼, ¼, ½, ½, 1
 dance: tango
 figure_name: Basic Reverse Turn
 figure_number: 23
+turn_direction: reverse
 follow:
   associate: []
   fellow:

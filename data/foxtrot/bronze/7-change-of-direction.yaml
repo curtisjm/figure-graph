@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Change of Direction
 figure_number: 7
+turn_direction: reverse
 follow:
   associate:
   - Feather Step

@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Double Reverse Spin
 figure_number: 16
+turn_direction: reverse
 follow:
   associate:
   - Chassé Reverse Turn — Progressive Chassé to R — Double Reverse Spin.

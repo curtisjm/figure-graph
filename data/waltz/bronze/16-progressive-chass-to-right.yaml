@@ -3,6 +3,7 @@ beat_value: 1, ½, ½, 1, 1
 dance: waltz
 figure_name: Progressive Chassé to Right
 figure_number: 16
+turn_direction: reverse
 follow:
   associate:
   - 4-6 Natural Turn

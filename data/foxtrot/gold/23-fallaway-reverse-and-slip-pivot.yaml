@@ -3,6 +3,7 @@ beat_value: 2, 1, 1, 2; 2, 1, 1, 1; 2, 1, ½, ½, 1; 2, 1, ½, ½, 1; 2, 1, ½, 
 dance: foxtrot
 figure_name: Fallaway Reverse and Slip Pivot
 figure_number: 23
+turn_direction: reverse
 follow:
   associate: []
   fellow:

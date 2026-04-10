@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Progressive Chassé
 figure_number: 6
+turn_direction: null
 follow:
   associate:
   - Forward Lock — any figure commencing with RF fwd

@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Natural Weave
 figure_number: 6
+turn_direction: natural
 follow:
   associate:
   - Feather Step

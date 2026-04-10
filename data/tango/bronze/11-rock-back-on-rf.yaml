@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Rock Back on RF
 figure_number: 11
+turn_direction: null
 follow:
   associate:
   - Back Corté — LF Rock

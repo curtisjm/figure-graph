@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Open Impetus and Cross Hesitation
 figure_number: 21
+turn_direction: natural
 follow:
   associate: null
   fellow: null

@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Natural Twist Turn
 figure_number: 12
+turn_direction: natural
 follow:
   associate:
   - Any Promenade figure — Back Corté — LF Rock

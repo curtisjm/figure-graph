@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Closed Impetus and Feather Finish
 figure_number: 5
+turn_direction: natural
 follow:
   associate:
   - As for Feather Step

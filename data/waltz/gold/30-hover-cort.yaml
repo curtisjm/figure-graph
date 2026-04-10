@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Hover Corté
 figure_number: 30
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

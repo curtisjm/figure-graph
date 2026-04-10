@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Closed Impetus
 figure_number: 9
+turn_direction: natural
 follow:
   associate:
   - Reverse Pivot (after step 3). At corner

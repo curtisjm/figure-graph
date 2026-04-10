@@ -2,6 +2,7 @@ _source_pdf_page: 49
 dance: quickstep
 figure_name: Tipsy to Left
 figure_number: 26
+turn_direction: reverse
 follow:
   associate: []
   fellow:

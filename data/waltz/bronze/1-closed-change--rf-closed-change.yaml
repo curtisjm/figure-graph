@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Closed Change
 figure_number: 1
+turn_direction: null
 follow:
   associate:
   - Any Reverse figure

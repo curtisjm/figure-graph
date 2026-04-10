@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Open Impetus
 figure_number: 17
+turn_direction: natural
 follow:
   associate: []
   fellow:

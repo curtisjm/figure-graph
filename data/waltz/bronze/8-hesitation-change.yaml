@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Hesitation Change
 figure_number: 8
+turn_direction: natural
 follow:
   associate:
   - Reverse Turn

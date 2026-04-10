@@ -3,6 +3,7 @@ beat_value: ½ to L
 dance: tango
 figure_name: Progressive Side Step Reverse Turn
 figure_number: 9
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

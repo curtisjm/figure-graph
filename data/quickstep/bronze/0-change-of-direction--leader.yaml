@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Change of Direction
 figure_number: null
+turn_direction: reverse
 follow:
   associate:
   - Chase Reverse Turn — Progressive Chase to R. At corner — Cross Chase

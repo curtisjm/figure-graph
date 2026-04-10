@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Natural Turn
 figure_number: 2
+turn_direction: natural
 follow:
   associate:
   - RF Closed Change

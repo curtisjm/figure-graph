@@ -2,6 +2,7 @@ _source_pdf_page: 49
 dance: quickstep
 figure_name: Tipsy to Right
 figure_number: 26
+turn_direction: natural
 follow:
   associate: []
   fellow:

@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Outside Spin
 figure_number: 23
+turn_direction: natural
 follow:
   associate: []
   fellow:

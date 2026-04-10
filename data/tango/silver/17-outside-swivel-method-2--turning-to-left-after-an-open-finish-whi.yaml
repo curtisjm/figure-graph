@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Outside Swivel Method 2
 figure_number: 17
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

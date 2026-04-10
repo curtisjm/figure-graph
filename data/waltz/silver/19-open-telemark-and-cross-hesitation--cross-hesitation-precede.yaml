@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Open Telemark and Cross Hesitation
 figure_number: 19
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

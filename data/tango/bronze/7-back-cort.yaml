@@ -3,6 +3,7 @@ beat_value: null
 dance: tango
 figure_name: Back Corté
 figure_number: 7
+turn_direction: reverse
 follow:
   associate:
   - As for Closed Promenade

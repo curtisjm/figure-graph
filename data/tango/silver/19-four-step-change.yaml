@@ -3,6 +3,7 @@ beat_value: ½, ½, ½, ½ or ½, ¼, ¼, 1.
 dance: tango
 figure_name: Four Step Change
 figure_number: 19
+turn_direction: null
 follow:
   associate: []
   fellow:

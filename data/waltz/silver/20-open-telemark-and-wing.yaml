@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Open Telemark and Wing
 figure_number: 20
+turn_direction: reverse
 follow:
   associate: null
   fellow: null

@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Reverse Corté
 figure_number: 10
+turn_direction: reverse
 follow:
   associate:
   - Step 1 of all Follows will be in CBMP with Follower OP

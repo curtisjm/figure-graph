@@ -3,6 +3,7 @@ beat_value: 2, ½, ½, ¼, 1, 1, 2
 dance: foxtrot
 figure_name: Natural Twist Turn
 figure_number: 20
+turn_direction: natural
 follow:
   associate: []
   fellow:

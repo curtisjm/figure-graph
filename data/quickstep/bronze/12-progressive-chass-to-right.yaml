@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Progressive Chassé to Right
 figure_number: 12
+turn_direction: null
 follow:
   associate:
   - Closed Impetus

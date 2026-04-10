@@ -3,6 +3,7 @@ beat_value: ½, ½, ½, ½, ½, 1 or ½, ½, ⅓, ⅓, ⅓, 1
 dance: tango
 figure_name: Five Step
 figure_number: 26
+turn_direction: null
 follow:
   associate: []
   fellow:

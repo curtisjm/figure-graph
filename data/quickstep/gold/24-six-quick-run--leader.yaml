@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Six Quick Run
 figure_number: 24
+turn_direction: reverse
 follow:
   associate: []
   fellow:

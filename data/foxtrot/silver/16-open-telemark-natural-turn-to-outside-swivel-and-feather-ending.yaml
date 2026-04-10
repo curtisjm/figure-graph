@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Open Telemark, Natural Turn to Outside Swivel and Feather Ending
 figure_number: 16
+turn_direction: reverse
 follow:
   associate: []
   fellow: []

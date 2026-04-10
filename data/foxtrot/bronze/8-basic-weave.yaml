@@ -3,6 +3,7 @@ beat_value: null
 dance: foxtrot
 figure_name: Basic Weave
 figure_number: 8
+turn_direction: reverse
 follow:
   associate:
   - As for Reverse Turn

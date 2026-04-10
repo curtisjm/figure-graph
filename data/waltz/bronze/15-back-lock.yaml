@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Back Lock
 figure_number: 15
+turn_direction: null
 follow: null
 follower:
   cbm: null

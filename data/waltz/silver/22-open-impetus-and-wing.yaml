@@ -3,6 +3,7 @@ beat_value: null
 dance: waltz
 figure_name: Open Impetus and Wing
 figure_number: 22
+turn_direction: natural
 follow:
   associate: []
   fellow: []

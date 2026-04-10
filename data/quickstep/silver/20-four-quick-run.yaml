@@ -3,6 +3,7 @@ beat_value: null
 dance: quickstep
 figure_name: Four Quick Run
 figure_number: 20
+turn_direction: reverse
 follow:
   associate: null
   fellow:
