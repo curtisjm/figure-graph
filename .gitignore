@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+package-lock.json
 
 # Build
 .next/
@@ -43,3 +44,4 @@ data/raw/
 .dolt/
 *.db
 .beads-credential-key
+.vercel
