@@ -14,7 +14,7 @@ import {
   Scale,
   CalendarDays,
   CheckCircle2,
-  Circle,
+  XCircle,
   AlertTriangle,
 } from "lucide-react";
 
@@ -67,8 +67,15 @@ export default function DashboardOverviewPage() {
   const transitions = statusTransitions[comp.status] ?? [];
   const hasSchedule = (dashboard?.days?.length ?? 0) > 0;
   const hasEvents = (dashboard?.eventCount ?? 0) > 0;
-  const hasJudges = (dashboard?.judgeCount ?? 0) > 0;
-  const hasStaff = (dashboard?.staffCount ?? 0) > 0;
+  const judgeCount = dashboard?.judgeCount ?? 0;
+  const roleCounts = dashboard?.staffRoleCounts ?? {};
+
+  const requiredStaffRoles = [
+    { role: "scrutineer", label: "Scrutineer", min: 1 },
+    { role: "emcee", label: "Emcee", min: 1 },
+    { role: "chairman", label: "Chairman", min: 1 },
+    { role: "dj", label: "DJ", min: 1 },
+  ] as const;
 
   const checklist = [
     {
@@ -83,14 +90,15 @@ export default function DashboardOverviewPage() {
     },
     {
       label: "Assign judges",
-      done: hasJudges,
+      done: judgeCount >= 5,
+      detail: `${judgeCount}/5 assigned`,
       href: `/competitions/${slug}/dashboard/judges`,
     },
-    {
-      label: "Assign staff",
-      done: hasStaff,
+    ...requiredStaffRoles.map((r) => ({
+      label: `Assign ${r.label}`,
+      done: (roleCounts[r.role] ?? 0) >= r.min,
       href: `/competitions/${slug}/dashboard/staff`,
-    },
+    })),
   ];
 
   const completedSteps = checklist.filter((c) => c.done).length;
@@ -181,7 +189,7 @@ export default function DashboardOverviewPage() {
                 {item.done ? (
                   <CheckCircle2 className="size-5 text-green-500 shrink-0" />
                 ) : (
-                  <Circle className="size-5 text-muted-foreground shrink-0" />
+                  <XCircle className="size-5 text-red-500 shrink-0" />
                 )}
                 <span
                   className={
@@ -190,6 +198,11 @@ export default function DashboardOverviewPage() {
                 >
                   {item.label}
                 </span>
+                {"detail" in item && item.detail && (
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {item.detail}
+                  </span>
+                )}
               </Link>
             ))}
           </div>

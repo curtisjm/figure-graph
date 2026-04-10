@@ -29,6 +29,7 @@ const staffRoles = [
   "scrutineer",
   "chairman",
   "emcee",
+  "dj",
   "deck_captain",
   "registration",
 ] as const;
@@ -38,6 +39,7 @@ const roleLabels: Record<string, string> = {
   chairman: "Chairman",
   judge: "Judge",
   emcee: "Emcee",
+  dj: "DJ",
   deck_captain: "Deck Captain",
   registration: "Registration",
 };

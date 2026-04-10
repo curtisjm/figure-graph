@@ -186,10 +186,24 @@ export const competitionRouter = router({
         .from(competitionStaff)
         .where(eq(competitionStaff.competitionId, competition.id));
 
+      const staffRoleCounts = await db
+        .select({
+          role: competitionStaff.role,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(competitionStaff)
+        .where(eq(competitionStaff.competitionId, competition.id))
+        .groupBy(competitionStaff.role);
+
       const judgeCount = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(competitionJudges)
         .where(eq(competitionJudges.competitionId, competition.id));
+
+      const roleCounts: Record<string, number> = {};
+      for (const row of staffRoleCounts) {
+        roleCounts[row.role] = row.count;
+      }
 
       return {
         ...competition,
@@ -199,6 +213,7 @@ export const competitionRouter = router({
         })),
         eventCount: eventCount[0]?.count ?? 0,
         staffCount: staffCount[0]?.count ?? 0,
+        staffRoleCounts: roleCounts,
         judgeCount: judgeCount[0]?.count ?? 0,
       };
     }),

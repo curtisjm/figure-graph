@@ -72,6 +72,7 @@ export const staffRouter = router({
           "emcee",
           "deck_captain",
           "registration",
+          "dj",
         ]),
       }),
     )
@@ -122,6 +123,7 @@ export const staffRouter = router({
           "emcee",
           "deck_captain",
           "registration",
+          "dj",
         ]),
       }),
     )

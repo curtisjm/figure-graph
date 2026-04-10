@@ -82,6 +82,7 @@ export const competitionStaffRoleEnum = pgEnum("competition_staff_role", [
   "emcee",
   "deck_captain",
   "registration",
+  "dj",
 ]);
 
 export const danceStyleEnum = pgEnum("dance_style", [
