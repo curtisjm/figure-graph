@@ -413,6 +413,7 @@ export const rounds = pgTable(
     position: integer("position").notNull(),
     callbacksRequested: integer("callbacks_requested"),
     status: roundStatusEnum("status").notNull().default("pending"),
+    heatsApproved: boolean("heats_approved").notNull().default(false),
   },
   (table) => [
     uniqueIndex("rounds_event_pos_idx").on(table.eventId, table.position),

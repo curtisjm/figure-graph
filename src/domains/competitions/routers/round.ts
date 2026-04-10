@@ -267,6 +267,12 @@ export const roundRouter = router({
       });
       const entryIds = eventEntries.map((e) => e.id);
 
+      // Reset heat approval since we're redistributing
+      await db
+        .update(rounds)
+        .set({ heatsApproved: false })
+        .where(eq(rounds.id, round.id));
+
       // Delete existing heats for this round (cascade deletes assignments)
       const existingHeats = await db.query.heats.findMany({
         where: eq(heats.roundId, round.id),
@@ -293,6 +299,28 @@ export const roundRouter = router({
       }
 
       return { heats: created, entries: entryIds.length };
+    }),
+
+  approveHeats: protectedProcedure
+    .input(z.object({ roundId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const round = await db.query.rounds.findFirst({
+        where: eq(rounds.id, input.roundId),
+      });
+      if (!round) throw new TRPCError({ code: "NOT_FOUND", message: "Round not found" });
+
+      const event = await db.query.competitionEvents.findFirst({
+        where: eq(competitionEvents.id, round.eventId),
+      });
+      await requireCompStaffRole(event!.competitionId, ctx.userId, ["chairman"]);
+
+      const [updated] = await db
+        .update(rounds)
+        .set({ heatsApproved: true })
+        .where(eq(rounds.id, input.roundId))
+        .returning();
+
+      return updated;
     }),
 
   moveEntry: protectedProcedure

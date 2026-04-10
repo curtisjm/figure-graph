@@ -7,10 +7,10 @@ import { trpc, type RouterOutput } from "@shared/lib/trpc";
 type CompetitionEvent = RouterOutput["event"]["listByCompetition"][number];
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
+import { Card, CardContent } from "@shared/ui/card";
 import { Skeleton } from "@shared/ui/skeleton";
 import { toast } from "sonner";
-import { Wand2, ChevronDown, ChevronRight, ArrowRightLeft } from "lucide-react";
+import { Wand2, ChevronDown, ChevronRight, ArrowRightLeft, CheckCircle2 } from "lucide-react";
 import { cn } from "@shared/lib/utils";
 
 export default function RoundsPage() {
@@ -98,8 +98,26 @@ function EventRoundsCard({
     onError: (err) => toast.error(err.message),
   });
 
+  const utils = trpc.useUtils();
+
   const updateRound = trpc.round.update.useMutation({
     onSuccess: () => toast.success("Round updated"),
+    onError: (err) => toast.error(err.message),
+  });
+
+  const approveHeats = trpc.round.approveHeats.useMutation({
+    onSuccess: () => {
+      utils.round.listByEvent.invalidate({ eventId: event.id });
+      toast.success("Heats approved");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const reassignHeats = trpc.round.reassignHeats.useMutation({
+    onSuccess: (result) => {
+      utils.round.listByEvent.invalidate({ eventId: event.id });
+      toast.success(`Reassigned ${result.entries} entries across ${result.heats} heats`);
+    },
     onError: (err) => toast.error(err.message),
   });
 
@@ -165,6 +183,23 @@ function EventRoundsCard({
                       >
                         {round.status}
                       </Badge>
+                      {round.heats?.length > 0 && (
+                        <Badge
+                          variant={round.heatsApproved ? "default" : "outline"}
+                          className={cn(
+                            "text-xs",
+                            round.heatsApproved
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "text-amber-600 dark:text-amber-400",
+                          )}
+                        >
+                          {round.heatsApproved ? (
+                            <><CheckCircle2 className="size-3 mr-1" /> Heats Approved</>
+                          ) : (
+                            "Heats Pending Approval"
+                          )}
+                        </Badge>
+                      )}
                     </div>
                     {round.callbacksRequested && (
                       <span className="text-xs text-muted-foreground">
@@ -185,6 +220,31 @@ function EventRoundsCard({
                     </div>
                   )}
                   <div className="flex gap-1">
+                    {round.heats?.length > 0 && !round.heatsApproved && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            reassignHeats.mutate({ roundId: round.id })
+                          }
+                          disabled={reassignHeats.isPending}
+                        >
+                          <ArrowRightLeft className="size-3 mr-1" />
+                          Reassign Heats
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            approveHeats.mutate({ roundId: round.id })
+                          }
+                          disabled={approveHeats.isPending}
+                        >
+                          <CheckCircle2 className="size-3 mr-1" />
+                          Approve Heats
+                        </Button>
+                      </>
+                    )}
                     {round.status === "pending" && (
                       <Button
                         size="sm"

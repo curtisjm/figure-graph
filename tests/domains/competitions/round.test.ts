@@ -174,6 +174,44 @@ describe("round router", () => {
       expect(result.entries).toBe(4);
     });
 
+    it("approves heats for a round", async () => {
+      const ownerCaller = createCaller(ownerId);
+
+      // Register 3 couples and generate rounds
+      for (let i = 0; i < 3; i++) {
+        await registerCouple(ownerCaller);
+      }
+      await ownerCaller.round.generateForEvent({ eventId });
+      const roundList = await ownerCaller.round.listByEvent({ eventId });
+      const firstRound = roundList[0]!;
+
+      expect(firstRound.heatsApproved).toBe(false);
+
+      const approved = await ownerCaller.round.approveHeats({ roundId: firstRound.id });
+      expect(approved.heatsApproved).toBe(true);
+    });
+
+    it("resets heats approval on reassignHeats", async () => {
+      const ownerCaller = createCaller(ownerId);
+      await ownerCaller.competition.update({ competitionId: compId, maxHeatSize: 2 });
+
+      for (let i = 0; i < 4; i++) {
+        await registerCouple(ownerCaller);
+      }
+      await ownerCaller.round.generateForEvent({ eventId });
+      const roundList = await ownerCaller.round.listByEvent({ eventId });
+      const firstRound = roundList[0]!;
+
+      // Approve heats first
+      await ownerCaller.round.approveHeats({ roundId: firstRound.id });
+
+      // Reassign heats should reset approval
+      await ownerCaller.round.reassignHeats({ roundId: firstRound.id });
+
+      const updatedRounds = await ownerCaller.round.listByEvent({ eventId });
+      expect(updatedRounds[0]!.heatsApproved).toBe(false);
+    });
+
     it("moves an entry between heats", async () => {
       const ownerCaller = createCaller(ownerId);
       await ownerCaller.competition.update({ competitionId: compId, maxHeatSize: 2 });
