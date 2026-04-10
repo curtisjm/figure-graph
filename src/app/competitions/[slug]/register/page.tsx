@@ -185,16 +185,19 @@ export default function RegisterPage() {
   // Build entry assignments for review
   const entryAssignments: EntryAssignment[] = useMemo(() => {
     if (!myReg) return [];
-    return selectedEventIds.map((eventId) => {
-      const partner = getPartnerForEvent(eventId)!;
-      const role = getRoleForEvent(eventId);
-      return {
-        eventId,
-        leaderRegistrationId: role === "leader" ? myReg.id : (partner.registrationId ?? 0),
-        followerRegistrationId: role === "follower" ? myReg.id : (partner.registrationId ?? 0),
-        partner,
-      };
-    });
+    return selectedEventIds
+      .map((eventId) => {
+        const partner = getPartnerForEvent(eventId);
+        if (!partner) return null;
+        const role = getRoleForEvent(eventId);
+        return {
+          eventId,
+          leaderRegistrationId: role === "leader" ? myReg.id : (partner.registrationId ?? 0),
+          followerRegistrationId: role === "follower" ? myReg.id : (partner.registrationId ?? 0),
+          partner,
+        };
+      })
+      .filter((a): a is EntryAssignment => a !== null);
   }, [selectedEventIds, myReg, defaultPartner, defaultRole, perEventPartner, perEventRole]);
 
   // ── Handlers ──────────────────────────────────────────────────
