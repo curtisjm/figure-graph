@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, ne, or, ilike, sql, desc, asc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import {
   competitions,
   competitionRegistrations,
+  competitionEvents,
   entries,
   payments,
   pricingTiers,
@@ -35,11 +36,39 @@ export const registrationRouter = router({
       if (!reg) return null;
 
       const entryList = await db
-        .select()
+        .select({
+          id: entries.id,
+          eventId: entries.eventId,
+          eventName: competitionEvents.name,
+          eventStyle: competitionEvents.style,
+          eventLevel: competitionEvents.level,
+          scratched: entries.scratched,
+          leaderRegistrationId: entries.leaderRegistrationId,
+          followerRegistrationId: entries.followerRegistrationId,
+          leaderDisplayName: sql<string>`lu.display_name`,
+          leaderUsername: sql<string>`lu.username`,
+          leaderAvatarUrl: sql<string | null>`lu.avatar_url`,
+          followerDisplayName: sql<string>`fu.display_name`,
+          followerUsername: sql<string>`fu.username`,
+          followerAvatarUrl: sql<string | null>`fu.avatar_url`,
+        })
         .from(entries)
+        .innerJoin(competitionEvents, eq(competitionEvents.id, entries.eventId))
+        .innerJoin(
+          sql`competition_registrations lr`,
+          sql`lr.id = ${entries.leaderRegistrationId}`,
+        )
+        .innerJoin(sql`users lu`, sql`lu.id = lr.user_id`)
+        .innerJoin(
+          sql`competition_registrations fr`,
+          sql`fr.id = ${entries.followerRegistrationId}`,
+        )
+        .innerJoin(sql`users fu`, sql`fu.id = fr.user_id`)
         .where(
-          sql`${entries.leaderRegistrationId} = ${reg.id} OR ${entries.followerRegistrationId} = ${reg.id}`,
-        );
+          sql`${entries.leaderRegistrationId} = ${reg.id}
+              OR ${entries.followerRegistrationId} = ${reg.id}`,
+        )
+        .orderBy(asc(competitionEvents.position));
 
       const paymentList = await db
         .select()
@@ -329,5 +358,169 @@ export const registrationRouter = router({
         .returning();
 
       return updated;
+    }),
+
+  searchPartners: protectedProcedure
+    .input(
+      z.object({
+        competitionId: z.number(),
+        query: z.string().min(1).max(50),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const pattern = `%${input.query}%`;
+      const results = await db
+        .select({
+          userId: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+          registrationId: competitionRegistrations.id,
+        })
+        .from(users)
+        .leftJoin(
+          competitionRegistrations,
+          and(
+            eq(competitionRegistrations.userId, users.id),
+            eq(competitionRegistrations.competitionId, input.competitionId),
+            eq(competitionRegistrations.cancelled, false),
+          ),
+        )
+        .where(
+          and(
+            ne(users.id, ctx.userId),
+            or(
+              ilike(users.username, pattern),
+              ilike(users.displayName, pattern),
+            ),
+          ),
+        )
+        .limit(20);
+
+      return results;
+    }),
+
+  ensurePartnerRegistered: protectedProcedure
+    .input(
+      z.object({
+        competitionId: z.number(),
+        partnerUserId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const comp = await db.query.competitions.findFirst({
+        where: eq(competitions.id, input.competitionId),
+      });
+      if (!comp) throw new TRPCError({ code: "NOT_FOUND", message: "Competition not found" });
+
+      if (comp.status !== "accepting_entries") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Competition is not accepting entries",
+        });
+      }
+
+      if (input.partnerUserId === ctx.userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot register yourself as a partner",
+        });
+      }
+
+      // Check if partner user exists
+      const partner = await db.query.users.findFirst({
+        where: eq(users.id, input.partnerUserId),
+      });
+      if (!partner) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+
+      // Return existing registration if present
+      const existing = await db.query.competitionRegistrations.findFirst({
+        where: and(
+          eq(competitionRegistrations.competitionId, input.competitionId),
+          eq(competitionRegistrations.userId, input.partnerUserId),
+        ),
+      });
+      if (existing) return existing;
+
+      // Auto-register the partner
+      const amountOwed = comp.baseFee ?? "0";
+      const [reg] = await db
+        .insert(competitionRegistrations)
+        .values({
+          competitionId: input.competitionId,
+          userId: input.partnerUserId,
+          amountOwed,
+          registeredBy: ctx.userId,
+        })
+        .returning();
+
+      return reg;
+    }),
+
+  getPartnerEntries: protectedProcedure
+    .input(
+      z.object({
+        competitionId: z.number(),
+        registrationId: z.number(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const reg = await db.query.competitionRegistrations.findFirst({
+        where: and(
+          eq(competitionRegistrations.id, input.registrationId),
+          eq(competitionRegistrations.competitionId, input.competitionId),
+        ),
+      });
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, reg.userId),
+      });
+
+      const entryList = await db
+        .select({
+          id: entries.id,
+          eventId: entries.eventId,
+          eventName: competitionEvents.name,
+          eventStyle: competitionEvents.style,
+          eventLevel: competitionEvents.level,
+          scratched: entries.scratched,
+          leaderRegistrationId: entries.leaderRegistrationId,
+          followerRegistrationId: entries.followerRegistrationId,
+          leaderDisplayName: sql<string>`lu.display_name`,
+          leaderUsername: sql<string>`lu.username`,
+          followerDisplayName: sql<string>`fu.display_name`,
+          followerUsername: sql<string>`fu.username`,
+        })
+        .from(entries)
+        .innerJoin(competitionEvents, eq(competitionEvents.id, entries.eventId))
+        .innerJoin(
+          sql`competition_registrations lr`,
+          sql`lr.id = ${entries.leaderRegistrationId}`,
+        )
+        .innerJoin(sql`users lu`, sql`lu.id = lr.user_id`)
+        .innerJoin(
+          sql`competition_registrations fr`,
+          sql`fr.id = ${entries.followerRegistrationId}`,
+        )
+        .innerJoin(sql`users fu`, sql`fu.id = fr.user_id`)
+        .where(
+          sql`${entries.leaderRegistrationId} = ${input.registrationId}
+              OR ${entries.followerRegistrationId} = ${input.registrationId}`,
+        )
+        .orderBy(asc(competitionEvents.position));
+
+      return {
+        registration: reg,
+        user: user
+          ? {
+              id: user.id,
+              username: user.username,
+              displayName: user.displayName,
+              avatarUrl: user.avatarUrl,
+            }
+          : null,
+        entries: entryList,
+      };
     }),
 });

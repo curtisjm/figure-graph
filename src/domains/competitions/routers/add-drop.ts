@@ -119,6 +119,13 @@ export const addDropRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
       }
 
+      if (leaderReg.userId === followerReg.userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Leader and follower cannot be the same person",
+        });
+      }
+
       const isPartner = ctx.userId === leaderReg.userId || ctx.userId === followerReg.userId;
       let isOrgAdmin = false;
       if (!isPartner && leaderReg.orgId) {

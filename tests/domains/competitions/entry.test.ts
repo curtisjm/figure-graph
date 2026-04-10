@@ -70,6 +70,17 @@ describe("entry router", () => {
       expect(entry.scratched).toBe(false);
     });
 
+    it("rejects self as both leader and follower", async () => {
+      const caller = createCaller(leaderId);
+      await expect(
+        caller.entry.create({
+          eventId,
+          leaderRegistrationId: leaderRegId,
+          followerRegistrationId: leaderRegId,
+        }),
+      ).rejects.toThrow("Leader and follower cannot be the same person");
+    });
+
     it("rejects duplicate entries", async () => {
       const caller = createCaller(leaderId);
       await caller.entry.create({
@@ -182,9 +193,10 @@ describe("entry router", () => {
 
       const caller = createCaller(leaderId);
       const created = await caller.entry.bulkCreate({
-        eventIds: [eventId, event2.id],
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
+        entries: [
+          { eventId, leaderRegistrationId: leaderRegId, followerRegistrationId: followerRegId },
+          { eventId: event2.id, leaderRegistrationId: leaderRegId, followerRegistrationId: followerRegId },
+        ],
       });
 
       expect(created).toHaveLength(2);
@@ -199,12 +211,23 @@ describe("entry router", () => {
       });
 
       const created = await caller.entry.bulkCreate({
-        eventIds: [eventId],
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
+        entries: [
+          { eventId, leaderRegistrationId: leaderRegId, followerRegistrationId: followerRegId },
+        ],
       });
 
       expect(created).toHaveLength(1); // Returns existing, doesn't error
+    });
+
+    it("rejects self as both leader and follower in bulk", async () => {
+      const caller = createCaller(leaderId);
+      await expect(
+        caller.entry.bulkCreate({
+          entries: [
+            { eventId, leaderRegistrationId: leaderRegId, followerRegistrationId: leaderRegId },
+          ],
+        }),
+      ).rejects.toThrow("Leader and follower cannot be the same person");
     });
   });
 });

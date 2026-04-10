@@ -198,6 +198,13 @@ export const entryRouter = router({
         });
       }
 
+      if (leaderReg.userId === followerReg.userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Leader and follower cannot be the same person",
+        });
+      }
+
       // Check the user is one of the couple or staff
       const isParticipant = leaderReg.userId === ctx.userId || followerReg.userId === ctx.userId;
       if (!isParticipant) {
@@ -303,15 +310,21 @@ export const entryRouter = router({
   bulkCreate: protectedProcedure
     .input(
       z.object({
-        eventIds: z.number().array().min(1),
-        leaderRegistrationId: z.number(),
-        followerRegistrationId: z.number(),
+        entries: z
+          .array(
+            z.object({
+              eventId: z.number(),
+              leaderRegistrationId: z.number(),
+              followerRegistrationId: z.number(),
+            }),
+          )
+          .min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       // Validate the first event to get competition context
       const firstEvent = await db.query.competitionEvents.findFirst({
-        where: eq(competitionEvents.id, input.eventIds[0]!),
+        where: eq(competitionEvents.id, input.entries[0]!.eventId),
       });
       if (!firstEvent) throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
 
@@ -327,40 +340,60 @@ export const entryRouter = router({
         });
       }
 
-      // Validate registrations
-      const leaderReg = await db.query.competitionRegistrations.findFirst({
-        where: and(
-          eq(competitionRegistrations.id, input.leaderRegistrationId),
-          eq(competitionRegistrations.competitionId, comp.id),
-        ),
-      });
-      const followerReg = await db.query.competitionRegistrations.findFirst({
-        where: and(
-          eq(competitionRegistrations.id, input.followerRegistrationId),
-          eq(competitionRegistrations.competitionId, comp.id),
-        ),
-      });
-
-      if (!leaderReg || !followerReg) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Both registrations must belong to this competition",
-        });
+      // Collect unique registration IDs for validation
+      const regIds = new Set<number>();
+      for (const e of input.entries) {
+        regIds.add(e.leaderRegistrationId);
+        regIds.add(e.followerRegistrationId);
       }
 
-      const isParticipant = leaderReg.userId === ctx.userId || followerReg.userId === ctx.userId;
-      if (!isParticipant) {
-        await requireCompStaffRole(comp.id, ctx.userId, ["registration"]);
+      // Validate all registrations belong to this competition
+      const regMap = new Map<number, typeof competitionRegistrations.$inferSelect>();
+      for (const regId of regIds) {
+        const reg = await db.query.competitionRegistrations.findFirst({
+          where: and(
+            eq(competitionRegistrations.id, regId),
+            eq(competitionRegistrations.competitionId, comp.id),
+          ),
+        });
+        if (!reg) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Registration ${regId} does not belong to this competition`,
+          });
+        }
+        regMap.set(regId, reg);
+      }
+
+      // Validate each entry
+      for (const e of input.entries) {
+        const leaderReg = regMap.get(e.leaderRegistrationId)!;
+        const followerReg = regMap.get(e.followerRegistrationId)!;
+
+        if (leaderReg.userId === followerReg.userId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Leader and follower cannot be the same person",
+          });
+        }
+
+        const isParticipant =
+          leaderReg.userId === ctx.userId || followerReg.userId === ctx.userId;
+        if (!isParticipant) {
+          await requireCompStaffRole(comp.id, ctx.userId, ["registration"]);
+        }
       }
 
       const created = [];
-      for (const eventId of input.eventIds) {
+      const recalcRegIds = new Set<number>();
+
+      for (const e of input.entries) {
         // Skip duplicates silently
         const existing = await db.query.entries.findFirst({
           where: and(
-            eq(entries.eventId, eventId),
-            eq(entries.leaderRegistrationId, input.leaderRegistrationId),
-            eq(entries.followerRegistrationId, input.followerRegistrationId),
+            eq(entries.eventId, e.eventId),
+            eq(entries.leaderRegistrationId, e.leaderRegistrationId),
+            eq(entries.followerRegistrationId, e.followerRegistrationId),
           ),
         });
         if (existing) {
@@ -371,18 +404,22 @@ export const entryRouter = router({
         const [entry] = await db
           .insert(entries)
           .values({
-            eventId,
-            leaderRegistrationId: input.leaderRegistrationId,
-            followerRegistrationId: input.followerRegistrationId,
+            eventId: e.eventId,
+            leaderRegistrationId: e.leaderRegistrationId,
+            followerRegistrationId: e.followerRegistrationId,
             createdBy: ctx.userId,
           })
           .returning();
         created.push(entry);
+
+        recalcRegIds.add(e.leaderRegistrationId);
+        recalcRegIds.add(e.followerRegistrationId);
       }
 
       if (comp.pricingModel === "per_event") {
-        await recalcAmountOwed(input.leaderRegistrationId);
-        await recalcAmountOwed(input.followerRegistrationId);
+        for (const regId of recalcRegIds) {
+          await recalcAmountOwed(regId);
+        }
       }
 
       return created;

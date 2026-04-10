@@ -25,6 +25,15 @@ import {
 } from "@shared/ui/dialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { PartnerSearch } from "@competitions/components/partner-search";
+
+type PartnerInfo = {
+  userId: string;
+  username: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  registrationId: number | null;
+};
 
 export default function AddDropPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -47,7 +56,12 @@ export default function AddDropPage() {
       refetch();
       toast.success("Request submitted");
       setShowSubmit(false);
+      resetForm();
     },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const ensurePartnerMutation = trpc.registration.ensurePartnerRegistered.useMutation({
     onError: (err) => toast.error(err.message),
   });
 
@@ -55,6 +69,16 @@ export default function AddDropPage() {
   const [requestType, setRequestType] = useState<string>("add");
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [reason, setReason] = useState("");
+  const [myRole, setMyRole] = useState<"leader" | "follower">("leader");
+  const [partner, setPartner] = useState<PartnerInfo | null>(null);
+
+  function resetForm() {
+    setRequestType("add");
+    setSelectedEventId("");
+    setReason("");
+    setMyRole("leader");
+    setPartner(null);
+  }
 
   if (isLoading || !comp) {
     return (
@@ -66,6 +90,34 @@ export default function AddDropPage() {
   }
 
   const canSubmit = comp.status === "entries_closed" || comp.status === "running";
+
+  async function handleSubmit() {
+    if (!myReg || !selectedEventId || !partner || !comp) return;
+
+    let partnerRegId = partner.registrationId;
+
+    // Auto-register partner if needed
+    if (!partnerRegId) {
+      try {
+        const reg = await ensurePartnerMutation.mutateAsync({
+          competitionId: comp.id,
+          partnerUserId: partner.userId,
+        });
+        partnerRegId = reg.id;
+      } catch {
+        return;
+      }
+    }
+
+    submitRequest.mutate({
+      competitionId: comp.id,
+      type: requestType as any,
+      eventId: Number(selectedEventId),
+      leaderRegistrationId: myRole === "leader" ? myReg.id : partnerRegId,
+      followerRegistrationId: myRole === "follower" ? myReg.id : partnerRegId,
+      reason: reason || undefined,
+    });
+  }
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
@@ -135,7 +187,7 @@ export default function AddDropPage() {
       ) : null}
 
       {/* Submit Request Dialog */}
-      <Dialog open={showSubmit} onOpenChange={setShowSubmit}>
+      <Dialog open={showSubmit} onOpenChange={(open) => { setShowSubmit(open); if (!open) resetForm(); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Submit Add/Drop Request</DialogTitle>
@@ -158,7 +210,7 @@ export default function AddDropPage() {
                   <SelectValue placeholder="Select event" />
                 </SelectTrigger>
                 <SelectContent>
-                  {events?.map((event) => (
+                  {events?.map((event: any) => (
                     <SelectItem key={event.id} value={event.id.toString()}>
                       {event.name}
                     </SelectItem>
@@ -166,6 +218,56 @@ export default function AddDropPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Role selection */}
+            <div className="space-y-2">
+              <Label>Your Role</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={myRole === "leader" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMyRole("leader")}
+                >
+                  Leader
+                </Button>
+                <Button
+                  type="button"
+                  variant={myRole === "follower" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMyRole("follower")}
+                >
+                  Follower
+                </Button>
+              </div>
+            </div>
+
+            {/* Partner search */}
+            <div className="space-y-2">
+              <Label>Partner</Label>
+              {partner ? (
+                <div className="flex items-center justify-between p-2 rounded-md border">
+                  <span className="text-sm">
+                    {partner.displayName ?? partner.username}
+                    {partner.username && (
+                      <span className="text-muted-foreground ml-1">@{partner.username}</span>
+                    )}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => setPartner(null)}>
+                    Change
+                  </Button>
+                </div>
+              ) : (
+                comp && (
+                  <PartnerSearch
+                    competitionId={comp.id}
+                    onSelect={setPartner}
+                    excludeUserIds={myReg ? [myReg.userId] : []}
+                  />
+                )
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label>Reason (optional)</Label>
               <Textarea
@@ -178,20 +280,12 @@ export default function AddDropPage() {
           </div>
           <DialogFooter>
             <Button
-              onClick={() => {
-                if (!myReg || !selectedEventId) return;
-                submitRequest.mutate({
-                  competitionId: comp.id,
-                  type: requestType as any,
-                  eventId: Number(selectedEventId),
-                  leaderRegistrationId: myReg.id,
-                  followerRegistrationId: myReg.id,
-                  reason: reason || undefined,
-                });
-              }}
-              disabled={submitRequest.isPending || !selectedEventId}
+              onClick={handleSubmit}
+              disabled={submitRequest.isPending || ensurePartnerMutation.isPending || !selectedEventId || !partner}
             >
-              {submitRequest.isPending ? "Submitting..." : "Submit Request"}
+              {submitRequest.isPending || ensurePartnerMutation.isPending
+                ? "Submitting..."
+                : "Submit Request"}
             </Button>
           </DialogFooter>
         </DialogContent>
