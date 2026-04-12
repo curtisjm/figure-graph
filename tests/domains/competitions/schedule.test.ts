@@ -169,4 +169,37 @@ describe("schedule router", () => {
       expect(blocks[0]!.id).toBe(b2.id);
     });
   });
+
+  describe("moveBlock", () => {
+    it("moves a block from one day to another", async () => {
+      const caller = createCaller(ownerId);
+      const day1 = await caller.schedule.addDay({ competitionId: compId, date: "2026-06-15", label: "Day 1" });
+      const day2 = await caller.schedule.addDay({ competitionId: compId, date: "2026-06-16", label: "Day 2" });
+
+      const b1 = await caller.schedule.addBlock({ dayId: day1.id, type: "session", label: "Smooth" });
+      const b2 = await caller.schedule.addBlock({ dayId: day1.id, type: "session", label: "Latin" });
+      const b3 = await caller.schedule.addBlock({ dayId: day2.id, type: "session", label: "Standard" });
+
+      // Move "Latin" from day1 to day2 (at position 0, before "Standard")
+      await caller.schedule.moveBlock({
+        blockId: b2.id,
+        toDayId: day2.id,
+        blockIds: [b2.id, b3.id],
+      });
+
+      const publicCaller = createPublicCaller();
+      const days = await publicCaller.schedule.getDays({ competitionId: compId });
+
+      const d1 = days.find((d) => d.id === day1.id)!;
+      const d2 = days.find((d) => d.id === day2.id)!;
+
+      expect(d1.blocks).toHaveLength(1);
+      expect(d1.blocks[0]!.label).toBe("Smooth");
+      expect(d1.blocks[0]!.position).toBe(1);
+
+      expect(d2.blocks).toHaveLength(2);
+      expect(d2.blocks[0]!.label).toBe("Latin");
+      expect(d2.blocks[1]!.label).toBe("Standard");
+    });
+  });
 });

@@ -357,6 +357,87 @@ export const scheduleRouter = router({
       return { success: true };
     }),
 
+  moveBlock: protectedProcedure
+    .input(
+      z.object({
+        blockId: z.number(),
+        toDayId: z.number(),
+        blockIds: z.number().array(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const block = await db.query.scheduleBlocks.findFirst({
+        where: eq(scheduleBlocks.id, input.blockId),
+      });
+      if (!block) throw new TRPCError({ code: "NOT_FOUND", message: "Block not found" });
+
+      const fromDay = await db.query.competitionDays.findFirst({
+        where: eq(competitionDays.id, block.dayId),
+      });
+      if (!fromDay) throw new TRPCError({ code: "NOT_FOUND", message: "Source day not found" });
+
+      const toDay = await db.query.competitionDays.findFirst({
+        where: eq(competitionDays.id, input.toDayId),
+      });
+      if (!toDay) throw new TRPCError({ code: "NOT_FOUND", message: "Target day not found" });
+
+      if (fromDay.competitionId !== toDay.competitionId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Days must belong to the same competition" });
+      }
+
+      await requireCompOrgRole(fromDay.competitionId, ctx.userId);
+
+      // Move block to target day
+      await db
+        .update(scheduleBlocks)
+        .set({ dayId: input.toDayId })
+        .where(eq(scheduleBlocks.id, input.blockId));
+
+      // Reorder blocks in the target day (two-pass for unique constraint)
+      for (let i = 0; i < input.blockIds.length; i++) {
+        await db
+          .update(scheduleBlocks)
+          .set({ position: -(i + 1) })
+          .where(
+            and(
+              eq(scheduleBlocks.id, input.blockIds[i]!),
+              eq(scheduleBlocks.dayId, input.toDayId),
+            ),
+          );
+      }
+      for (let i = 0; i < input.blockIds.length; i++) {
+        await db
+          .update(scheduleBlocks)
+          .set({ position: i + 1 })
+          .where(
+            and(
+              eq(scheduleBlocks.id, input.blockIds[i]!),
+              eq(scheduleBlocks.dayId, input.toDayId),
+            ),
+          );
+      }
+
+      // Reorder remaining blocks in the source day
+      const remainingBlocks = await db.query.scheduleBlocks.findMany({
+        where: eq(scheduleBlocks.dayId, block.dayId),
+        orderBy: asc(scheduleBlocks.position),
+      });
+      for (let i = 0; i < remainingBlocks.length; i++) {
+        await db
+          .update(scheduleBlocks)
+          .set({ position: -(i + 1) })
+          .where(eq(scheduleBlocks.id, remainingBlocks[i]!.id));
+      }
+      for (let i = 0; i < remainingBlocks.length; i++) {
+        await db
+          .update(scheduleBlocks)
+          .set({ position: i + 1 })
+          .where(eq(scheduleBlocks.id, remainingBlocks[i]!.id));
+      }
+
+      return { success: true };
+    }),
+
   applyDefaultTemplate: protectedProcedure
     .input(
       z.object({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
@@ -29,6 +29,20 @@ import {
   Wand2,
 } from "lucide-react";
 import { cn } from "@shared/lib/utils";
+
+interface Block {
+  id: number;
+  label: string;
+  type: string;
+  position: number;
+}
+
+interface Day {
+  id: number;
+  date: string | null;
+  label: string | null;
+  blocks: Block[];
+}
 
 export default function SchedulePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -60,6 +74,15 @@ export default function SchedulePage() {
       invalidate();
       toast.success("Day added");
       setShowAddDay(false);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateDay = trpc.schedule.updateDay.useMutation({
+    onSuccess: () => {
+      invalidate();
+      toast.success("Day updated");
+      setEditDay(null);
     },
     onError: (err) => toast.error(err.message),
   });
@@ -103,10 +126,20 @@ export default function SchedulePage() {
     onError: (err) => toast.error(err.message),
   });
 
+  const moveBlock = trpc.schedule.moveBlock.useMutation({
+    onSuccess: () => invalidate(),
+    onError: (err) => toast.error(err.message),
+  });
+
   // Dialog state
   const [showAddDay, setShowAddDay] = useState(false);
   const [newDayDate, setNewDayDate] = useState("");
   const [newDayLabel, setNewDayLabel] = useState("");
+  const [editDay, setEditDay] = useState<{
+    id: number;
+    date: string;
+    label: string;
+  } | null>(null);
   const [addBlockDayId, setAddBlockDayId] = useState<number | null>(null);
   const [newBlockLabel, setNewBlockLabel] = useState("");
   const [newBlockType, setNewBlockType] = useState<"session" | "break">("session");
@@ -115,6 +148,24 @@ export default function SchedulePage() {
     label: string;
     type: string;
   } | null>(null);
+
+  // Cross-day drag state
+  const [blocksByDay, setBlocksByDay] = useState<Record<string, Block[]>>({});
+  const snapshot = useRef<Record<string, Block[]>>({});
+
+  // Sync server data into local drag state
+  const serverKey = days?.map((d) => `${d.id}:${d.blocks.map((b) => b.id).join(",")}`).join("|") ?? "";
+  const [prevServerKey, setPrevServerKey] = useState("");
+  if (serverKey !== prevServerKey) {
+    setPrevServerKey(serverKey);
+    if (days) {
+      const next: Record<string, Block[]> = {};
+      for (const day of days) {
+        next[String(day.id)] = day.blocks;
+      }
+      setBlocksByDay(next);
+    }
+  }
 
   if (isLoading || !comp) {
     return (
@@ -162,29 +213,85 @@ export default function SchedulePage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {days!.map((day) => (
-            <DayCard
-              key={day.id}
-              day={day}
-              onAddBlock={() => setAddBlockDayId(day.id)}
-              onEditBlock={(block) => setEditBlock(block)}
-              onRemoveBlock={(blockId) => {
-                if (confirm("Remove this block? Events will be unlinked.")) {
-                  removeBlock.mutate({ blockId });
+        <DragDropProvider
+          onDragStart={() => {
+            snapshot.current = structuredClone(blocksByDay);
+          }}
+          onDragOver={(event) => {
+            setBlocksByDay((prev) => move(prev, event));
+          }}
+          onDragEnd={(event) => {
+            if (event.canceled) {
+              setBlocksByDay(snapshot.current);
+              return;
+            }
+
+            const { source } = event.operation;
+            if (!source) return;
+
+            const s = source as unknown as {
+              initialGroup?: string;
+              group?: string;
+              initialIndex?: number;
+              index?: number;
+              id: number;
+            };
+
+            const { initialGroup, group, initialIndex, index } = s;
+            if (initialGroup == null || group == null) return;
+            if (initialIndex == null || index == null) return;
+
+            if (initialGroup === group) {
+              // Same-day reorder
+              const dayBlocks = blocksByDay[group];
+              if (dayBlocks) {
+                reorderBlocks.mutate({
+                  dayId: Number(group),
+                  blockIds: dayBlocks.map((b) => b.id),
+                });
+              }
+            } else {
+              // Cross-day move
+              const targetBlocks = blocksByDay[group];
+              if (targetBlocks) {
+                moveBlock.mutate({
+                  blockId: s.id,
+                  toDayId: Number(group),
+                  blockIds: targetBlocks.map((b) => b.id),
+                });
+              }
+            }
+          }}
+        >
+          <div className="space-y-6">
+            {days!.map((day) => (
+              <DayCard
+                key={day.id}
+                day={day}
+                blocks={blocksByDay[String(day.id)] ?? []}
+                onAddBlock={() => setAddBlockDayId(day.id)}
+                onEditDay={() =>
+                  setEditDay({
+                    id: day.id,
+                    date: day.date ?? "",
+                    label: day.label ?? "",
+                  })
                 }
-              }}
-              onRemoveDay={() => {
-                if (confirm(`Remove ${day.label ?? "this day"}? All blocks will be deleted.`)) {
-                  removeDay.mutate({ dayId: day.id });
-                }
-              }}
-              onReorderBlocks={(blockIds) => {
-                reorderBlocks.mutate({ dayId: day.id, blockIds });
-              }}
-            />
-          ))}
-        </div>
+                onEditBlock={(block) => setEditBlock(block)}
+                onRemoveBlock={(blockId) => {
+                  if (confirm("Remove this block? Events will be unlinked.")) {
+                    removeBlock.mutate({ blockId });
+                  }
+                }}
+                onRemoveDay={() => {
+                  if (confirm(`Remove ${day.label ?? "this day"}? All blocks will be deleted.`)) {
+                    removeDay.mutate({ dayId: day.id });
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </DragDropProvider>
       )}
 
       {/* Add Day Dialog */}
@@ -225,6 +332,57 @@ export default function SchedulePage() {
               disabled={addDay.isPending || !newDayDate}
             >
               {addDay.isPending ? "Adding..." : "Add Day"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Day Dialog */}
+      <Dialog open={editDay !== null} onOpenChange={() => setEditDay(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Day</DialogTitle>
+          </DialogHeader>
+          {editDay && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="editDayLabel">Label</Label>
+                <Input
+                  id="editDayLabel"
+                  value={editDay.label}
+                  onChange={(e) =>
+                    setEditDay({ ...editDay, label: e.target.value })
+                  }
+                  placeholder="e.g. Day 1, Finals Day"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editDayDate">Date</Label>
+                <Input
+                  id="editDayDate"
+                  type="date"
+                  value={editDay.date}
+                  onChange={(e) =>
+                    setEditDay({ ...editDay, date: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                if (editDay) {
+                  updateDay.mutate({
+                    dayId: editDay.id,
+                    label: editDay.label || null,
+                    date: editDay.date || undefined,
+                  });
+                }
+              }}
+              disabled={updateDay.isPending}
+            >
+              {updateDay.isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -324,45 +482,25 @@ export default function SchedulePage() {
 
 // ── Day Card with sortable blocks ───────────────────────────────
 
-interface Block {
-  id: number;
-  label: string;
-  type: string;
-  position: number;
-}
-
 interface DayCardProps {
-  day: {
-    id: number;
-    date: string | null;
-    label: string | null;
-    blocks: Block[];
-  };
+  day: Day;
+  blocks: Block[];
   onAddBlock: () => void;
+  onEditDay: () => void;
   onEditBlock: (block: { id: number; label: string; type: string }) => void;
   onRemoveBlock: (blockId: number) => void;
   onRemoveDay: () => void;
-  onReorderBlocks: (blockIds: number[]) => void;
 }
 
 function DayCard({
   day,
+  blocks,
   onAddBlock,
+  onEditDay,
   onEditBlock,
   onRemoveBlock,
   onRemoveDay,
-  onReorderBlocks,
 }: DayCardProps) {
-  const [blocks, setBlocks] = useState(day.blocks);
-
-  // Sync with server data
-  if (
-    day.blocks.length !== blocks.length ||
-    day.blocks.some((b, i) => b.id !== blocks[i]?.id)
-  ) {
-    setBlocks(day.blocks);
-  }
-
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -378,6 +516,9 @@ function DayCard({
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={onAddBlock}>
               <Plus className="size-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onEditDay}>
+              <Pencil className="size-4" />
             </Button>
             <Button
               variant="ghost"
@@ -396,27 +537,19 @@ function DayCard({
             No blocks. Add sessions or breaks.
           </p>
         ) : (
-          <DragDropProvider
-            onDragEnd={(event) => {
-              if (event.canceled) return;
-              const newBlocks = move(blocks, event);
-              setBlocks(newBlocks);
-              onReorderBlocks(newBlocks.map((b) => b.id));
-            }}
-          >
-            <div className="space-y-1">
-              {blocks.map((block, index) => (
-                <SortableBlock
-                  key={block.id}
-                  id={block.id}
-                  index={index}
-                  block={block}
-                  onEdit={() => onEditBlock(block)}
-                  onRemove={() => onRemoveBlock(block.id)}
-                />
-              ))}
-            </div>
-          </DragDropProvider>
+          <div className="space-y-1">
+            {blocks.map((block, index) => (
+              <SortableBlock
+                key={block.id}
+                id={block.id}
+                index={index}
+                group={String(day.id)}
+                block={block}
+                onEdit={() => onEditBlock(block)}
+                onRemove={() => onRemoveBlock(block.id)}
+              />
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
@@ -428,17 +561,25 @@ function DayCard({
 function SortableBlock({
   id,
   index,
+  group,
   block,
   onEdit,
   onRemove,
 }: {
   id: number;
   index: number;
+  group: string;
   block: Block;
   onEdit: () => void;
   onRemove: () => void;
 }) {
-  const { ref } = useSortable({ id, index });
+  const { ref } = useSortable({
+    id,
+    index,
+    group,
+    type: "item",
+    accept: "item",
+  });
 
   return (
     <div
