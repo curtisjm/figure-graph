@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { saveFolders, savedPosts, posts } from "@social/schema";
 import { users } from "@shared/schema";
+import { isPostAccessible } from "@social/lib/post-access";
 
 export const saveRouter = router({
   folders: protectedProcedure.query(async ({ ctx }) => {
@@ -90,6 +92,24 @@ export const saveRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify post is accessible before allowing save
+      const [post] = await db
+        .select({
+          authorId: posts.authorId,
+          visibility: posts.visibility,
+          visibilityOrgId: posts.visibilityOrgId,
+          publishedAt: posts.publishedAt,
+        })
+        .from(posts)
+        .where(eq(posts.id, input.postId));
+
+      if (!post || !(await isPostAccessible(post, ctx.userId))) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Post not found",
+        });
+      }
+
       await db
         .insert(savedPosts)
         .values({
@@ -147,11 +167,14 @@ export const saveRouter = router({
         conditions.push(eq(savedPosts.folderId, input.folderId));
       }
 
-      return db
+      const rows = await db
         .select({
           savedPostId: savedPosts.id,
           postId: posts.id,
+          authorId: posts.authorId,
           type: posts.type,
+          visibility: posts.visibility,
+          visibilityOrgId: posts.visibilityOrgId,
           title: posts.title,
           body: posts.body,
           publishedAt: posts.publishedAt,
@@ -164,5 +187,24 @@ export const saveRouter = router({
         .leftJoin(users, eq(posts.authorId, users.id))
         .where(and(...conditions))
         .orderBy(asc(savedPosts.createdAt));
+
+      // Filter out posts the user can no longer access
+      const accessible = [];
+      for (const row of rows) {
+        if (await isPostAccessible(row, ctx.userId)) {
+          accessible.push({
+            savedPostId: row.savedPostId,
+            postId: row.postId,
+            type: row.type,
+            title: row.title,
+            body: row.body,
+            publishedAt: row.publishedAt,
+            authorUsername: row.authorUsername,
+            authorDisplayName: row.authorDisplayName,
+            authorAvatarUrl: row.authorAvatarUrl,
+          });
+        }
+      }
+      return accessible;
     }),
 });
