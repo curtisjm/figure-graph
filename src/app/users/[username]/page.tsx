@@ -139,7 +139,7 @@ export default async function UserProfilePage({
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
       <ProfileHeader user={profileUser} isOwnProfile={isOwnProfile} />
 
       {partnerSearch && (
@@ -156,7 +156,7 @@ export default async function UserProfilePage({
           </div>
         ) : (
           <Tabs defaultValue="posts">
-            <TabsList>
+            <TabsList className="w-full sm:w-fit">
               <TabsTrigger value="posts">Posts</TabsTrigger>
               <TabsTrigger value="routines">Routines</TabsTrigger>
               <TabsTrigger value="competitions">Competitions</TabsTrigger>

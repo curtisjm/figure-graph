@@ -129,9 +129,9 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
         placeholder="Start writing your article..."
       />
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
         <select
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm w-full sm:w-auto"
           value={visibility}
           onChange={(e) => {
             const v = e.target.value as typeof visibility;
@@ -146,7 +146,7 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
 
         {visibility === "organization" && userOrgs && userOrgs.length > 0 && (
           <select
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm w-full sm:w-auto"
             value={visibilityOrgId ?? ""}
             onChange={(e) => setVisibilityOrgId(e.target.value ? Number(e.target.value) : null)}
           >
@@ -159,15 +159,17 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
           </select>
         )}
 
-        {!isPublished && (
-          <Button variant="outline" onClick={handleSaveDraft} disabled={isPending}>
-            Save Draft
-          </Button>
-        )}
+        <div className="flex gap-3 sm:gap-4">
+          {!isPublished && (
+            <Button variant="outline" onClick={handleSaveDraft} disabled={isPending} className="flex-1 sm:flex-initial">
+              Save Draft
+            </Button>
+          )}
 
-        <Button onClick={handlePublish} disabled={isPending || !title}>
-          {isPublished ? "Update" : "Publish"}
-        </Button>
+          <Button onClick={handlePublish} disabled={isPending || !title} className="flex-1 sm:flex-initial">
+            {isPublished ? "Update" : "Publish"}
+          </Button>
+        </div>
       </div>
     </div>
   );

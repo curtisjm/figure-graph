@@ -43,17 +43,17 @@ export function ProfileHeader({ user, isOwnProfile }: ProfileHeaderProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-start gap-6">
-        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-muted-foreground shrink-0">
+      <div className="flex items-start gap-4 sm:gap-6">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center text-xl sm:text-2xl font-bold text-muted-foreground shrink-0">
           {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt={user.displayName ?? user.username ?? ""} className="w-20 h-20 rounded-full object-cover" />
+            <img src={user.avatarUrl} alt={user.displayName ?? user.username ?? ""} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover" />
           ) : (
             (user.displayName?.[0] ?? user.username?.[0] ?? "?").toUpperCase()
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold truncate">{user.displayName ?? user.username ?? "Anonymous"}</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">{user.displayName ?? user.username ?? "Anonymous"}</h1>
             <FollowButton targetUserId={user.id} isOwnProfile={isOwnProfile} />
           </div>
           {user.username && <p className="text-muted-foreground">@{user.username}</p>}

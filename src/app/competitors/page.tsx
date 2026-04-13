@@ -19,10 +19,10 @@ export default function CompetitorSearchPage() {
     );
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+    <div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <Users className="size-6" />
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+          <Users className="size-5 sm:size-6" />
           Competitor Search
         </h1>
         <p className="text-sm text-muted-foreground">

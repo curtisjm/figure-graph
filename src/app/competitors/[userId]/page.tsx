@@ -41,7 +41,7 @@ export default function CompetitorHistoryPage() {
 
   if (!history) {
     return (
-      <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+      <div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 space-y-6">
         <BackLink />
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
@@ -58,18 +58,18 @@ export default function CompetitorHistoryPage() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+    <div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 space-y-6">
       <BackLink />
 
       {/* Profile header */}
       <div className="flex items-center gap-3">
-        <div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-          <span className="text-lg font-medium">
+        <div className="size-10 sm:size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
+          <span className="text-base sm:text-lg font-medium">
             {(history.user.displayName ?? "?").charAt(0).toUpperCase()}
           </span>
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
             {history.user.displayName}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -143,17 +143,17 @@ export default function CompetitorHistoryPage() {
                   {comp.events.map((event) => (
                     <div
                       key={event.eventId}
-                      className="flex items-center justify-between text-sm"
+                      className="flex items-center justify-between gap-2 text-sm"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="min-w-0">
                         <Link
                           href={`/competitions/${comp.competitionSlug}/results/${event.eventId}`}
-                          className="truncate hover:underline"
+                          className="truncate block hover:underline"
                         >
                           {event.eventName}
                         </Link>
                         {event.partnerName && (
-                          <span className="text-muted-foreground text-xs shrink-0">
+                          <span className="text-muted-foreground text-xs">
                             w/ {event.partnerName}
                           </span>
                         )}
@@ -263,10 +263,10 @@ function BackLink() {
 
 function HistorySkeleton() {
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+    <div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 space-y-6">
       <BackLink />
       <div className="flex items-center gap-3">
-        <Skeleton className="size-12 rounded-full" />
+        <Skeleton className="size-10 sm:size-12 rounded-full" />
         <div className="space-y-1">
           <Skeleton className="h-7 w-48" />
           <Skeleton className="h-4 w-24" />

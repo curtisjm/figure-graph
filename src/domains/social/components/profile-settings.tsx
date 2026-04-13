@@ -288,8 +288,8 @@ export function ProfileSettings() {
       </div>
 
       <div className="border-t pt-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-start sm:items-center justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-sm font-medium">Looking for a partner</p>
             <p className="text-xs text-muted-foreground">Show others that you&apos;re searching for a dance partner.</p>
           </div>
