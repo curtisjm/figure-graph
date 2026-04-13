@@ -348,7 +348,7 @@ function CallbackMarkingPage({
   }
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
+    <div className="space-y-4 max-w-md sm:max-w-lg mx-auto">
       {/* Header */}
       <div className="text-center space-y-1">
         <h2 className="text-lg font-semibold">{round.eventName}</h2>
@@ -371,7 +371,7 @@ function CallbackMarkingPage({
                 Heat {heatNum}
               </div>
             )}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {couples.map((couple) => {
                 const state = marks[couple.entryId] ?? "unmarked";
                 return (
@@ -381,7 +381,7 @@ function CallbackMarkingPage({
                     disabled={submitted && !editing}
                     className={`
                       aspect-square rounded-lg border-2 flex items-center justify-center
-                      text-2xl font-bold transition-all select-none
+                      text-xl sm:text-2xl font-bold transition-all select-none
                       ${
                         state === "marked"
                           ? "bg-green-600 border-green-700 text-white"
@@ -547,7 +547,7 @@ function FinalMarkingPage({
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
+    <div className="space-y-4 max-w-md sm:max-w-lg mx-auto">
       {/* Header */}
       <div className="text-center space-y-1">
         <h2 className="text-lg font-semibold">{round.eventName}</h2>
@@ -608,7 +608,7 @@ function FinalMarkingPage({
           )}
 
         {/* Unplaced couples */}
-        <div className="grid grid-cols-4 gap-2 pt-1">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
           {couples
             .filter((c) => !currentRanking[c.entryId])
             .map((couple) => (
@@ -618,7 +618,7 @@ function FinalMarkingPage({
                 disabled={submitted && !editing}
                 className={`
                   aspect-square rounded-lg border-2 flex items-center justify-center
-                  text-2xl font-bold transition-all select-none
+                  text-xl sm:text-2xl font-bold transition-all select-none
                   bg-muted border-border text-foreground hover:bg-accent
                   ${submitted && !editing ? "opacity-60" : "active:scale-95"}
                 `}
