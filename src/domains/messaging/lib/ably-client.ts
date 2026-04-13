@@ -103,17 +103,20 @@ export function useTypingIndicator(conversationId: number) {
   const getTokenMutation = trpc.ablyAuth.getToken.useMutation();
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
+  const clientRef = useRef<Ably.Realtime | null>(null);
 
   useEffect(() => {
     const client = acquireAblyClient(() => getTokenMutation.mutateAsync());
     const channel = client.channels.get(`conversation:${conversationId}`);
     channelRef.current = channel;
+    clientRef.current = client;
 
     const handler = (msg: Ably.Message) => {
       const { userId, isTyping } = msg.data as {
         userId: string;
         isTyping: boolean;
       };
+      if (!userId) return;
       setTypingUsers((prev) => {
         if (isTyping) {
           return prev.includes(userId) ? prev : [...prev, userId];
@@ -128,16 +131,16 @@ export function useTypingIndicator(conversationId: number) {
     return () => {
       channel.unsubscribe("typing", handler);
       channelRef.current = null;
+      clientRef.current = null;
       releaseAblyClient();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
   const sendTyping = useCallback((isTyping: boolean) => {
-    channelRef.current?.publish("typing", {
-      userId: ablyClient?.auth.clientId,
-      isTyping,
-    });
+    const userId = clientRef.current?.auth.clientId;
+    if (!userId) return;
+    channelRef.current?.publish("typing", { userId, isTyping });
   }, []);
 
   return { typingUsers, sendTyping };

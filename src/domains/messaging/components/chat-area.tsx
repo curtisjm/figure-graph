@@ -89,8 +89,9 @@ export function ChatArea({ conversationId }: ChatAreaProps) {
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      sendTyping(false);
     };
-  }, []);
+  }, [sendTyping]);
 
   const allDbItems = data?.pages.flatMap((p) => p.items) ?? [];
 
