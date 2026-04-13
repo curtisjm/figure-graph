@@ -65,5 +65,60 @@ describe("org-post router", () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe("Published");
     });
+
+    it("paginates with cursor returning next page items", async () => {
+      const org = await createOrg(owner.id);
+      const caller = createCaller(owner.id);
+
+      // Create 3 published posts
+      const post1 = await caller.orgPost.create({
+        orgId: org.id,
+        type: "article",
+        title: "Post 1",
+        body: "First",
+        publish: true,
+      });
+      const post2 = await caller.orgPost.create({
+        orgId: org.id,
+        type: "article",
+        title: "Post 2",
+        body: "Second",
+        publish: true,
+      });
+      const post3 = await caller.orgPost.create({
+        orgId: org.id,
+        type: "article",
+        title: "Post 3",
+        body: "Third",
+        publish: true,
+      });
+
+      const publicCaller = createPublicCaller();
+
+      // Page 1: limit 2 — should return 2 items + nextCursor
+      const page1 = await publicCaller.orgPost.listByOrg({ orgId: org.id, limit: 2 });
+      expect(page1.items).toHaveLength(2);
+      expect(page1.nextCursor).toBeDefined();
+
+      // Page 2: use cursor — should return remaining item(s), not re-include cursor row
+      const page2 = await publicCaller.orgPost.listByOrg({
+        orgId: org.id,
+        limit: 2,
+        cursor: page1.nextCursor,
+      });
+      expect(page2.items.length).toBeGreaterThanOrEqual(1);
+
+      // No overlap between pages
+      const page1Ids = page1.items.map((p: { id: number }) => p.id);
+      const page2Ids = page2.items.map((p: { id: number }) => p.id);
+      const overlap = page1Ids.filter((id: number) => page2Ids.includes(id));
+      expect(overlap).toHaveLength(0);
+
+      // All 3 posts accounted for across pages
+      const allIds = [...page1Ids, ...page2Ids];
+      expect(allIds).toContain(post1.id);
+      expect(allIds).toContain(post2.id);
+      expect(allIds).toContain(post3.id);
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, isNotNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, publicProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
@@ -96,17 +96,17 @@ export const orgPostRouter = router({
             eq(posts.orgId, orgId),
             eq(posts.visibility, "public"),
             isNotNull(posts.publishedAt),
-            ...(cursor ? [and(eq(posts.id, cursor))] : [])
+            ...(cursor ? [lt(posts.id, cursor)] : [])
           )
         )
         .orderBy(desc(posts.publishedAt))
         .limit(limit + 1);
 
-      // For cursor pagination, filter out the cursor item and take items after it
+      // Check if there's a next page by seeing if we got more than `limit` items
       let nextCursor: number | undefined;
       if (items.length > limit) {
-        const next = items.pop();
-        nextCursor = next!.id;
+        items.pop();
+        nextCursor = items[items.length - 1]!.id;
       }
 
       return { items, nextCursor };
