@@ -5,7 +5,6 @@ import { nanoid } from "nanoid";
 import { router, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { organizations, memberships, orgInvites } from "@orgs/schema";
-import { createNotification } from "@social/lib/notify";
 import { conversations, conversationMembers } from "@messaging/schema";
 import { requireAdminOrOwner } from "@orgs/lib/auth";
 
@@ -16,59 +15,6 @@ function sevenDaysFromNow() {
 }
 
 export const inviteRouter = router({
-  sendInvite: protectedProcedure
-    .input(
-      z.object({
-        orgId: z.number(),
-        userId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      await requireAdminOrOwner(input.orgId, ctx.userId);
-
-      const existingMembership = await db.query.memberships.findFirst({
-        where: and(
-          eq(memberships.orgId, input.orgId),
-          eq(memberships.userId, input.userId)
-        ),
-      });
-
-      if (existingMembership) {
-        throw new TRPCError({ code: "CONFLICT", message: "User is already a member" });
-      }
-
-      const pendingInvite = await db.query.orgInvites.findFirst({
-        where: and(
-          eq(orgInvites.orgId, input.orgId),
-          eq(orgInvites.invitedUserId, input.userId),
-          eq(orgInvites.status, "pending")
-        ),
-      });
-
-      if (pendingInvite) {
-        throw new TRPCError({ code: "CONFLICT", message: "A pending invite already exists for this user" });
-      }
-
-      const [invite] = await db
-        .insert(orgInvites)
-        .values({
-          orgId: input.orgId,
-          invitedUserId: input.userId,
-          invitedBy: ctx.userId,
-          expiresAt: sevenDaysFromNow(),
-        })
-        .returning();
-
-      await createNotification({
-        userId: input.userId,
-        type: "org_invite",
-        actorId: ctx.userId,
-        orgId: input.orgId,
-      });
-
-      return invite;
-    }),
-
   generateLink: protectedProcedure
     .input(z.object({ orgId: z.number() }))
     .mutation(async ({ ctx, input }) => {

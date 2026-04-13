@@ -4,6 +4,7 @@ import {
   createPublicCaller,
   createUser,
   createOrg,
+  createEntry,
   createJudge,
   truncateAll,
 } from "../../setup/helpers";
@@ -54,11 +55,7 @@ describe("scrutineer router", () => {
       competitionId: compId,
       partnerUsername: follower.username!,
     });
-    const entry = await leaderCaller.entry.create({
-      eventId,
-      leaderRegistrationId: reg.self.id,
-      followerRegistrationId: reg.partner!.id,
-    });
+    const entry = await createEntry(eventId, reg.self.id, reg.partner!.id);
     return { leader, follower, reg, entry };
   }
 

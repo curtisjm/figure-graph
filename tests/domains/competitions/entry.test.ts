@@ -4,6 +4,7 @@ import {
   createPublicCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 
@@ -55,58 +56,9 @@ describe("entry router", () => {
     followerRegId = regResult.partner!.id;
   });
 
-  describe("create", () => {
-    it("creates an entry for a couple", async () => {
-      const caller = createCaller(leaderId);
-      const entry = await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
-
-      expect(entry.eventId).toBe(eventId);
-      expect(entry.leaderRegistrationId).toBe(leaderRegId);
-      expect(entry.followerRegistrationId).toBe(followerRegId);
-      expect(entry.scratched).toBe(false);
-    });
-
-    it("rejects self as both leader and follower", async () => {
-      const caller = createCaller(leaderId);
-      await expect(
-        caller.entry.create({
-          eventId,
-          leaderRegistrationId: leaderRegId,
-          followerRegistrationId: leaderRegId,
-        }),
-      ).rejects.toThrow("Leader and follower cannot be the same person");
-    });
-
-    it("rejects duplicate entries", async () => {
-      const caller = createCaller(leaderId);
-      await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
-
-      await expect(
-        caller.entry.create({
-          eventId,
-          leaderRegistrationId: leaderRegId,
-          followerRegistrationId: followerRegId,
-        }),
-      ).rejects.toThrow("already exists");
-    });
-  });
-
   describe("listByEvent", () => {
     it("returns entries with couple info", async () => {
-      const caller = createCaller(leaderId);
-      await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
+      await createEntry(eventId, leaderRegId, followerRegId);
 
       const publicCaller = createPublicCaller();
       const entries = await publicCaller.entry.listByEvent({ eventId });
@@ -119,12 +71,7 @@ describe("entry router", () => {
 
   describe("listByCompetition", () => {
     it("returns events with their entries", async () => {
-      const caller = createCaller(leaderId);
-      await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
+      await createEntry(eventId, leaderRegId, followerRegId);
 
       const publicCaller = createPublicCaller();
       const result = await publicCaller.entry.listByCompetition({ competitionId: compId });
@@ -137,13 +84,9 @@ describe("entry router", () => {
 
   describe("remove", () => {
     it("removes an entry", async () => {
-      const caller = createCaller(leaderId);
-      const entry = await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
+      const entry = await createEntry(eventId, leaderRegId, followerRegId);
 
+      const caller = createCaller(leaderId);
       await caller.entry.remove({ entryId: entry.id });
 
       const publicCaller = createPublicCaller();
@@ -154,12 +97,7 @@ describe("entry router", () => {
 
   describe("scratch", () => {
     it("toggles scratch status (staff only)", async () => {
-      const caller = createCaller(leaderId);
-      const entry = await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
+      const entry = await createEntry(eventId, leaderRegId, followerRegId);
 
       // Assign deck captain
       const deckCaptain = await createUser();
@@ -203,13 +141,9 @@ describe("entry router", () => {
     });
 
     it("skips duplicates silently in bulk", async () => {
-      const caller = createCaller(leaderId);
-      await caller.entry.create({
-        eventId,
-        leaderRegistrationId: leaderRegId,
-        followerRegistrationId: followerRegId,
-      });
+      await createEntry(eventId, leaderRegId, followerRegId);
 
+      const caller = createCaller(leaderId);
       const created = await caller.entry.bulkCreate({
         entries: [
           { eventId, leaderRegistrationId: leaderRegId, followerRegistrationId: followerRegId },

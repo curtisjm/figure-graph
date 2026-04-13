@@ -1,9 +1,10 @@
+import { eq } from "drizzle-orm";
 import { getTestDb, getTestPool } from "./test-db";
 import { appRouter } from "@shared/auth/routers";
 import { users } from "@shared/schema";
 import { dances, figures } from "@syllabus/schema";
 import { posts, partnerSearchProfiles } from "@social/schema";
-import { organizations, memberships } from "@orgs/schema";
+import { organizations, memberships, orgInvites } from "@orgs/schema";
 import { conversations, conversationMembers } from "@messaging/schema";
 import {
   competitions,
@@ -219,6 +220,51 @@ export async function createRegistration(
     })
     .returning();
   return reg;
+}
+
+export async function createEntry(
+  eventId: number,
+  leaderRegistrationId: number,
+  followerRegistrationId: number,
+  overrides: Partial<typeof entries.$inferInsert> = {},
+) {
+  let createdBy = overrides.createdBy;
+  if (!createdBy) {
+    const reg = await db().query.competitionRegistrations.findFirst({
+      where: eq(competitionRegistrations.id, leaderRegistrationId),
+    });
+    createdBy = reg!.userId;
+  }
+  const [entry] = await db()
+    .insert(entries)
+    .values({
+      eventId,
+      leaderRegistrationId,
+      followerRegistrationId,
+      createdBy,
+      ...overrides,
+    })
+    .returning();
+  return entry;
+}
+
+export async function createInvite(
+  orgId: number,
+  invitedBy: string,
+  overrides: Partial<typeof orgInvites.$inferInsert> = {},
+) {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  const [invite] = await db()
+    .insert(orgInvites)
+    .values({
+      orgId,
+      invitedBy,
+      expiresAt,
+      ...overrides,
+    })
+    .returning();
+  return invite;
 }
 
 // ---------- Cleanup ----------
