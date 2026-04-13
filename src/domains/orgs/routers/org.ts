@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { eq, sql, lt, desc, and } from "drizzle-orm";
+import { eq, sql, lt, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, publicProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { organizations, memberships } from "@orgs/schema";
 import { conversations, conversationMembers } from "@messaging/schema";
+import { requireAdminOrOwner } from "@orgs/lib/auth";
 
 function slugify(name: string): string {
   return name
@@ -101,27 +102,7 @@ export const orgRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const org = await db.query.organizations.findFirst({
-        where: eq(organizations.id, input.orgId),
-      });
-
-      if (!org) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Organization not found" });
-      }
-
-      const membership = await db.query.memberships.findFirst({
-        where: and(
-          eq(memberships.orgId, input.orgId),
-          eq(memberships.userId, ctx.userId)
-        ),
-      });
-
-      const isOwner = org.ownerId === ctx.userId;
-      const isAdmin = membership?.role === "admin";
-
-      if (!isOwner && !isAdmin) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Admin or owner required" });
-      }
+      await requireAdminOrOwner(input.orgId, ctx.userId);
 
       const { orgId, ...updates } = input;
       const [updated] = await db

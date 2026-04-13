@@ -4,8 +4,9 @@ import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { users } from "@shared/schema";
-import { organizations, memberships } from "@orgs/schema";
+import { memberships } from "@orgs/schema";
 import { conversations, conversationMembers, messages } from "@messaging/schema";
+import { requireAdminOrOwner } from "@orgs/lib/auth";
 
 export const conversationRouter = router({
   getOrCreateDM: protectedProcedure
@@ -91,27 +92,7 @@ export const conversationRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const org = await db.query.organizations.findFirst({
-        where: eq(organizations.id, input.orgId),
-      });
-
-      if (!org) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Organization not found" });
-      }
-
-      const callerMembership = await db.query.memberships.findFirst({
-        where: and(
-          eq(memberships.orgId, input.orgId),
-          eq(memberships.userId, ctx.userId)
-        ),
-      });
-
-      const isOwner = org.ownerId === ctx.userId;
-      const isAdmin = callerMembership?.role === "admin";
-
-      if (!isOwner && !isAdmin) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Admin or owner required" });
-      }
+      await requireAdminOrOwner(input.orgId, ctx.userId);
 
       const [conversation] = await db
         .insert(conversations)

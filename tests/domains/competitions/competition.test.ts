@@ -46,7 +46,7 @@ describe("competition router", () => {
       const member = await createUser();
       const caller = createCaller(member.id);
 
-      await expect(caller.competition.create({ name: "Test", orgId })).rejects.toThrow("Org admin or owner required");
+      await expect(caller.competition.create({ name: "Test", orgId })).rejects.toThrow("Admin or owner required");
     });
   });
 
