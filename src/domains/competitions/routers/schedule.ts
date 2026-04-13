@@ -4,44 +4,11 @@ import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, publicProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import {
-  competitions,
   competitionDays,
   scheduleBlocks,
   competitionEvents,
 } from "@competitions/schema";
-import { organizations, memberships } from "@orgs/schema";
-import { competitionStaff } from "@competitions/schema";
-
-async function requireCompOrgRole(competitionId: number, userId: string) {
-  const comp = await db.query.competitions.findFirst({
-    where: eq(competitions.id, competitionId),
-  });
-  if (!comp) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Competition not found" });
-  }
-
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.id, comp.orgId),
-  });
-  const membership = await db.query.memberships.findFirst({
-    where: and(eq(memberships.orgId, comp.orgId), eq(memberships.userId, userId)),
-  });
-
-  const isOwner = org?.ownerId === userId;
-  const isAdmin = membership?.role === "admin";
-  if (isOwner || isAdmin) return comp;
-
-  const staff = await db.query.competitionStaff.findFirst({
-    where: and(
-      eq(competitionStaff.competitionId, competitionId),
-      eq(competitionStaff.userId, userId),
-      eq(competitionStaff.role, "scrutineer"),
-    ),
-  });
-  if (staff) return comp;
-
-  throw new TRPCError({ code: "FORBIDDEN", message: "Org admin/owner or scrutineer required" });
-}
+import { requireCompOrgRole } from "@competitions/lib/auth";
 
 const DEFAULT_SESSIONS = [
   "Smooth",

@@ -16,6 +16,7 @@ import {
 } from "@competitions/schema";
 import { organizations, memberships } from "@orgs/schema";
 import * as bcrypt from "bcryptjs";
+import { requireCompOrgRole } from "@competitions/lib/auth";
 
 function slugify(name: string): string {
   return name
@@ -23,57 +24,6 @@ function slugify(name: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-/**
- * Check that the user is an org admin/owner for the competition's org,
- * or an assigned scrutineer for this competition.
- */
-async function requireCompOrgRole(
-  competitionId: number,
-  userId: string,
-): Promise<{ competition: typeof competitions.$inferSelect }> {
-  const comp = await db.query.competitions.findFirst({
-    where: eq(competitions.id, competitionId),
-  });
-
-  if (!comp) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Competition not found" });
-  }
-
-  // Check org admin/owner
-  const membership = await db.query.memberships.findFirst({
-    where: and(
-      eq(memberships.orgId, comp.orgId),
-      eq(memberships.userId, userId),
-    ),
-  });
-
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.id, comp.orgId),
-  });
-
-  const isOwner = org?.ownerId === userId;
-  const isAdmin = membership?.role === "admin";
-
-  if (isOwner || isAdmin) {
-    return { competition: comp };
-  }
-
-  // Check scrutineer assignment
-  const staff = await db.query.competitionStaff.findFirst({
-    where: and(
-      eq(competitionStaff.competitionId, competitionId),
-      eq(competitionStaff.userId, userId),
-      eq(competitionStaff.role, "scrutineer"),
-    ),
-  });
-
-  if (staff) {
-    return { competition: comp };
-  }
-
-  throw new TRPCError({ code: "FORBIDDEN", message: "Org admin/owner or scrutineer required" });
 }
 
 export const competitionRouter = router({
@@ -164,7 +114,7 @@ export const competitionRouter = router({
   getForDashboard: protectedProcedure
     .input(z.object({ competitionId: z.number() }))
     .query(async ({ ctx, input }) => {
-      const { competition } = await requireCompOrgRole(input.competitionId, ctx.userId);
+      const competition = await requireCompOrgRole(input.competitionId, ctx.userId);
 
       const days = await db.query.competitionDays.findMany({
         where: eq(competitionDays.competitionId, competition.id),
@@ -224,7 +174,7 @@ export const competitionRouter = router({
   setupStatus: protectedProcedure
     .input(z.object({ competitionId: z.number() }))
     .query(async ({ ctx, input }) => {
-      const { competition } = await requireCompOrgRole(input.competitionId, ctx.userId);
+      const competition = await requireCompOrgRole(input.competitionId, ctx.userId);
       const compId = competition.id;
 
       // 1. Schedule — at least 1 day exists
