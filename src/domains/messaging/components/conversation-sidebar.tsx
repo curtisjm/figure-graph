@@ -18,7 +18,7 @@ export function ConversationSidebar() {
   const channels = conversations?.filter((c) => c.type === "org_channel") ?? [];
 
   return (
-    <div className="w-80 border-r flex flex-col h-full">
+    <div className="flex flex-col h-full">
       <div className="p-3 border-b flex items-center justify-between">
         <h2 className="font-semibold">Messages</h2>
         <NewConversation />

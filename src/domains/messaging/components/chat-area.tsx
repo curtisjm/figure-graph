@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { trpc } from "@shared/lib/trpc";
 import { useAuth } from "@clerk/nextjs";
+import { ArrowLeft } from "lucide-react";
 import { MessageBubble } from "./message-bubble";
 import { MessageInput } from "./message-input";
 import { TypingIndicator } from "./typing-indicator";
@@ -125,6 +127,16 @@ export function ChatArea({ conversationId }: ChatAreaProps) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Mobile-only back button */}
+      <div className="flex md:hidden items-center gap-2 p-3 border-b">
+        <Link
+          href="/messages"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Messages</span>
+        </Link>
+      </div>
       <ScrollArea className="flex-1 p-4">
         {hasNextPage && (
           <button
