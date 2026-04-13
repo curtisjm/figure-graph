@@ -1,16 +1,24 @@
 import { z } from "zod";
-import { eq, and, lt, desc, ilike, inArray, sql } from "drizzle-orm";
+import { eq, and, lt, or, desc, ilike, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, publicProcedure, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { users } from "@shared/schema";
 import { partnerSearchProfiles } from "@social/schema";
 
-const DANCE_STYLES = ["standard", "smooth", "latin", "rhythm", "nightclub"] as const;
+const DANCE_STYLES = [
+  "standard",
+  "smooth",
+  "latin",
+  "rhythm",
+  "nightclub",
+] as const;
 const ROLE_PREFERENCES = ["lead", "follow", "both"] as const;
 
 const upsertInput = z.object({
-  danceStyles: z.array(z.enum(DANCE_STYLES)).min(1, "Select at least one dance style"),
+  danceStyles: z
+    .array(z.enum(DANCE_STYLES))
+    .min(1, "Select at least one dance style"),
   height: z.string().max(30).optional(),
   location: z.string().max(100).optional(),
   bio: z.string().max(500).optional(),
@@ -91,12 +99,17 @@ export const partnerSearchRouter = router({
   discover: protectedProcedure
     .input(
       z.object({
-        cursor: z.string().optional(),
+        cursor: z
+          .object({
+            updatedAt: z.string(),
+            userId: z.string(),
+          })
+          .optional(),
         limit: z.number().min(1).max(50).default(20),
         style: z.enum(DANCE_STYLES).optional(),
         rolePreference: z.enum(ROLE_PREFERENCES).optional(),
         location: z.string().max(100).optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { cursor, limit, style, rolePreference, location } = input;
@@ -107,11 +120,15 @@ export const partnerSearchRouter = router({
       ];
 
       if (style) {
-        conditions.push(sql`${style} = ANY(${partnerSearchProfiles.danceStyles})`);
+        conditions.push(
+          sql`${style} = ANY(${partnerSearchProfiles.danceStyles})`,
+        );
       }
 
       if (rolePreference) {
-        conditions.push(eq(partnerSearchProfiles.rolePreference, rolePreference));
+        conditions.push(
+          eq(partnerSearchProfiles.rolePreference, rolePreference),
+        );
       }
 
       if (location) {
@@ -119,7 +136,15 @@ export const partnerSearchRouter = router({
       }
 
       if (cursor) {
-        conditions.push(sql`${partnerSearchProfiles.userId} < ${cursor}`);
+        conditions.push(
+          or(
+            lt(partnerSearchProfiles.updatedAt, new Date(cursor.updatedAt)),
+            and(
+              eq(partnerSearchProfiles.updatedAt, new Date(cursor.updatedAt)),
+              lt(partnerSearchProfiles.userId, cursor.userId),
+            ),
+          )!,
+        );
       }
 
       const results = await db
@@ -141,15 +166,25 @@ export const partnerSearchRouter = router({
         .from(partnerSearchProfiles)
         .innerJoin(users, eq(users.id, partnerSearchProfiles.userId))
         .where(and(...conditions))
-        .orderBy(desc(partnerSearchProfiles.updatedAt))
+        .orderBy(
+          desc(partnerSearchProfiles.updatedAt),
+          desc(partnerSearchProfiles.userId),
+        )
         .limit(limit + 1);
 
       const hasMore = results.length > limit;
       const items = hasMore ? results.slice(0, limit) : results;
+      const lastItem = items[items.length - 1];
 
       return {
         items,
-        nextCursor: hasMore ? items[items.length - 1]?.userId : undefined,
+        nextCursor:
+          hasMore && lastItem
+            ? {
+                updatedAt: lastItem.updatedAt.toISOString(),
+                userId: lastItem.userId,
+              }
+            : undefined,
       };
     }),
 });
