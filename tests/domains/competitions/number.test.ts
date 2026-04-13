@@ -3,6 +3,7 @@ import {
   createCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 
@@ -57,16 +58,8 @@ describe("number router", () => {
       });
 
       // Create entries (leaders need entries to get numbers)
-      await l1Caller.entry.create({
-        eventId: event.id,
-        leaderRegistrationId: reg1.self.id,
-        followerRegistrationId: reg1.partner!.id,
-      });
-      await l2Caller.entry.create({
-        eventId: event.id,
-        leaderRegistrationId: reg2.self.id,
-        followerRegistrationId: reg2.partner!.id,
-      });
+      await createEntry(event.id, reg1.self.id, reg1.partner!.id);
+      await createEntry(event.id, reg2.self.id, reg2.partner!.id);
 
       // Auto-assign
       const result = await ownerCaller.number.autoAssign({ competitionId: compId });
@@ -108,11 +101,7 @@ describe("number router", () => {
         partnerUsername: "follow",
       });
 
-      await lCaller.entry.create({
-        eventId: event.id,
-        leaderRegistrationId: reg.self.id,
-        followerRegistrationId: reg.partner!.id,
-      });
+      await createEntry(event.id, reg.self.id, reg.partner!.id);
 
       await ownerCaller.number.autoAssign({ competitionId: compId });
 

@@ -3,6 +3,7 @@ import {
   createCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 
@@ -50,11 +51,7 @@ describe("record-removal router", () => {
       dances: ["Waltz"],
     });
 
-    await competitorCaller.entry.create({
-      eventId: event.id,
-      leaderRegistrationId: regResult.self.id,
-      followerRegistrationId: regResult.partner!.id,
-    });
+    await createEntry(event.id, regResult.self.id, regResult.partner!.id);
 
     // Finish the competition
     await ownerCaller.competition.updateStatus({

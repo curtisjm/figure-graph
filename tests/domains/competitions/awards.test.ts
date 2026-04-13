@@ -3,6 +3,7 @@ import {
   createCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 
@@ -59,11 +60,7 @@ describe("awards router", () => {
           competitionId: compId,
           partnerUsername: follower.username!,
         });
-        await leaderCaller.entry.create({
-          eventId,
-          leaderRegistrationId: reg.self.id,
-          followerRegistrationId: reg.partner!.id,
-        });
+        await createEntry(eventId, reg.self.id, reg.partner!.id);
       }
 
       const result = await ownerCaller.awards.calculate({ competitionId: compId });
@@ -88,11 +85,7 @@ describe("awards router", () => {
           competitionId: compId,
           partnerUsername: follower.username!,
         });
-        await leaderCaller.entry.create({
-          eventId,
-          leaderRegistrationId: reg.self.id,
-          followerRegistrationId: reg.partner!.id,
-        });
+        await createEntry(eventId, reg.self.id, reg.partner!.id);
       }
 
       const result = await ownerCaller.awards.calculate({
@@ -120,11 +113,7 @@ describe("awards router", () => {
         competitionId: compId,
         partnerUsername: follower.username!,
       });
-      await leaderCaller.entry.create({
-        eventId,
-        leaderRegistrationId: reg.self.id,
-        followerRegistrationId: reg.partner!.id,
-      });
+      await createEntry(eventId, reg.self.id, reg.partner!.id);
 
       const result = await ownerCaller.awards.calculate({ competitionId: compId });
       const eventAwards = result.perEvent.find((e) => e.eventId === eventId)!;

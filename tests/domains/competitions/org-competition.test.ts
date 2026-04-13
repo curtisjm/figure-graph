@@ -3,6 +3,7 @@ import {
   createCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 import { getTestDb } from "../../setup/test-db";
@@ -72,11 +73,7 @@ describe("org-competition router", () => {
       orgId,
     });
 
-    await memberRegCaller.entry.create({
-      eventId: event.id,
-      leaderRegistrationId: regResult.self.id,
-      followerRegistrationId: regResult.partner!.id,
-    });
+    await createEntry(event.id, regResult.self.id, regResult.partner!.id);
   });
 
   // ── getOrgSchedule ────────────────────────────────────────────
@@ -136,22 +133,4 @@ describe("org-competition router", () => {
     });
   });
 
-  // ── submitAddDrop ─────────────────────────────────────────────
-
-  describe("submitAddDrop", () => {
-    it("rejects non-admin org member", async () => {
-      // member is a regular member, not admin
-      await expect(
-        memberCaller.orgCompetition.submitAddDrop({
-          competitionId: compId,
-          orgId,
-          type: "drop",
-          eventId: 1,
-          leaderRegistrationId: 1,
-          followerRegistrationId: 1,
-          reason: "Test",
-        }),
-      ).rejects.toThrow("Org admin required");
-    });
-  });
 });

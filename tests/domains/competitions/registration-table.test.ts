@@ -3,6 +3,7 @@ import {
   createCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 
@@ -58,11 +59,7 @@ describe("registration-table router", () => {
     followerRegId = regResult.partner!.id;
 
     // Create entry
-    await leaderCaller.entry.create({
-      eventId,
-      leaderRegistrationId: leaderRegId,
-      followerRegistrationId: followerRegId,
-    });
+    await createEntry(eventId, leaderRegId, followerRegId);
   });
 
   describe("getRegistrationTable", () => {

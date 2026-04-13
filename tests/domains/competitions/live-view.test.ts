@@ -4,6 +4,7 @@ import {
   createPublicCaller,
   createUser,
   createOrg,
+  createEntry,
   truncateAll,
 } from "../../setup/helpers";
 
@@ -46,11 +47,7 @@ describe("live-view router", () => {
       partnerUsername: "follower_lv",
     });
 
-    await leaderCaller.entry.create({
-      eventId,
-      leaderRegistrationId: regResult.self.id,
-      followerRegistrationId: regResult.partner!.id,
-    });
+    await createEntry(eventId, regResult.self.id, regResult.partner!.id);
   });
 
   describe("getSchedule", () => {
