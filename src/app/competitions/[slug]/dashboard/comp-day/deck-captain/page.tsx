@@ -41,8 +41,8 @@ export default function DeckCaptainPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Deck Captain</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base sm:text-lg font-semibold">Deck Captain</h2>
         <span className={cn(
           "text-xs flex items-center gap-1",
           connectionStatus === "connected" && "text-green-600 dark:text-green-400",
@@ -213,7 +213,7 @@ function CheckinTab({ competitionId }: { competitionId: number }) {
             onClick={() => handleTap(entry)}
             disabled={isMutating}
             className={cn(
-              "relative flex min-h-[7rem] flex-col items-center justify-center gap-1 rounded-xl border-2 p-3 transition-all",
+              "relative flex min-h-[6rem] sm:min-h-[7rem] flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 sm:p-3 transition-all",
               "active:scale-[0.97] disabled:opacity-70",
               "select-none touch-manipulation",
               // Status-based styles
@@ -229,15 +229,15 @@ function CheckinTab({ competitionId }: { competitionId: number }) {
             {entry.stayOnFloor && (
               <Badge
                 variant="secondary"
-                className="absolute top-1.5 right-1.5 px-1.5 py-0 text-[10px] leading-5"
+                className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 px-1 sm:px-1.5 py-0 text-[9px] sm:text-[10px] leading-4 sm:leading-5"
               >
-                <ArrowRight className="size-3 mr-0.5" />
+                <ArrowRight className="size-2.5 sm:size-3 mr-0.5" />
                 Stay
               </Badge>
             )}
 
             {/* Couple number */}
-            <span className="text-2xl font-bold leading-none">
+            <span className="text-xl sm:text-2xl font-bold leading-none">
               {entry.coupleNumber}
             </span>
 
@@ -248,10 +248,10 @@ function CheckinTab({ competitionId }: { competitionId: number }) {
                 entry.status === "scratched" && "line-through opacity-60",
               )}
             >
-              <p className="truncate text-sm leading-tight">
+              <p className="truncate text-xs sm:text-sm leading-tight">
                 {entry.leaderName}
               </p>
-              <p className="truncate text-sm leading-tight text-muted-foreground">
+              <p className="truncate text-xs sm:text-sm leading-tight text-muted-foreground">
                 {entry.followerName}
               </p>
             </div>
@@ -315,18 +315,18 @@ function ScheduleTab({ competitionId }: { competitionId: number }) {
     <div className="space-y-4 pt-4">
       {scheduleView.events.map((event) => (
         <Card key={event.id}>
-          <CardHeader className="py-3 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">
+          <CardHeader className="py-3 pb-2 px-3 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-medium truncate">
                 {event.name}
               </CardTitle>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs shrink-0">
                 <Users className="size-3 mr-1" />
-                {event.entryCount} entries
+                {event.entryCount}
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="pb-3">
+          <CardContent className="pb-3 px-3 sm:px-6">
             {event.rounds?.length ? (
               <div className="space-y-1">
                 {event.rounds.map((round) => (

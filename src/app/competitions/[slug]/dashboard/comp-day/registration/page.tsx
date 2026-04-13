@@ -187,9 +187,9 @@ export default function RegistrationTablePage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Registration Table
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight">
+            Registration
           </h2>
           <span className={cn(
             "text-xs flex items-center gap-1",
@@ -272,7 +272,8 @@ export default function RegistrationTablePage() {
                   {group.orgName} ({group.registrations.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
+              {/* Desktop/tablet table view */}
+              <CardContent className="hidden sm:block p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -360,6 +361,76 @@ export default function RegistrationTablePage() {
                     })}
                   </TableBody>
                 </Table>
+              </CardContent>
+
+              {/* Mobile card view */}
+              <CardContent className="sm:hidden px-3 pb-3 pt-0 space-y-2">
+                {group.registrations.map((reg) => {
+                  const balance = parseFloat(reg.balance);
+                  const isPaid = balance <= 0;
+                  return (
+                    <div
+                      key={reg.id}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg border p-3",
+                        reg.checkedIn && "border-green-500/30 bg-green-500/5",
+                      )}
+                    >
+                      <Checkbox
+                        checked={reg.checkedIn}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            checkin.mutate({ registrationId: reg.id });
+                          } else {
+                            undoCheckin.mutate({ registrationId: reg.id });
+                          }
+                        }}
+                        disabled={checkin.isPending || undoCheckin.isPending}
+                        className="shrink-0"
+                      />
+                      <div className="flex-1 min-w-0" onClick={() => setDetailRegId(reg.id)}>
+                        <div className="flex items-center gap-2">
+                          {reg.competitorNumber != null && (
+                            <span className="font-mono text-xs text-muted-foreground">
+                              #{reg.competitorNumber}
+                            </span>
+                          )}
+                          <span className="text-sm font-medium truncate">
+                            {reg.displayName ?? "Unknown"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                          <span>{reg.entryCount} entries</span>
+                          <span>&middot;</span>
+                          {isPaid ? (
+                            <span className="font-medium text-green-600 dark:text-green-400">
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="font-medium text-amber-600 dark:text-amber-400">
+                              ${balance.toFixed(2)} owed
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 shrink-0"
+                        onClick={() => {
+                          setPaymentReg(reg);
+                          setPayAmount(
+                            balance > 0 ? balance.toFixed(2) : "",
+                          );
+                          setPayMethod("cash");
+                          setPayNote("");
+                        }}
+                      >
+                        <DollarSign className="size-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </CardContent>
             </Card>
           ))}
@@ -617,7 +688,7 @@ export default function RegistrationTablePage() {
                     {pendingAddDrops.safe.map((req) => (
                       <div
                         key={req.id}
-                        className="flex items-center justify-between rounded-md border px-3 py-2"
+                        className="flex flex-col gap-2 rounded-md border px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="text-sm">
                           <span className="capitalize font-medium">
@@ -666,7 +737,7 @@ export default function RegistrationTablePage() {
                     {pendingAddDrops.needsReview.map((req) => (
                       <div
                         key={req.id}
-                        className="flex items-center justify-between rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/30 px-3 py-2"
+                        className="flex flex-col gap-2 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="text-sm">
                           <span className="capitalize font-medium">

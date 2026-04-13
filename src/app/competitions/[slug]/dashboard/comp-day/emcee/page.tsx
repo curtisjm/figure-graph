@@ -136,11 +136,11 @@ export default function EmceePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-3">
-            <Mic className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold">Emcee</h2>
+            <Mic className="h-6 w-6 text-primary shrink-0" />
+            <h2 className="text-xl sm:text-2xl font-bold">Emcee</h2>
             <span className={cn(
               "text-xs flex items-center gap-1",
               connectionStatus === "connected" && "text-green-600 dark:text-green-400",
@@ -156,7 +156,7 @@ export default function EmceePage() {
             </span>
           </div>
           {currentEvent && (
-            <div className="flex items-center gap-2 text-lg">
+            <div className="flex flex-wrap items-center gap-2 text-base sm:text-lg">
               <Badge
                 variant="default"
                 className="text-sm px-3 py-1 animate-pulse"
@@ -171,7 +171,7 @@ export default function EmceePage() {
             </div>
           )}
         </div>
-        <Button onClick={handleNewNote} size="lg" className="gap-2">
+        <Button onClick={handleNewNote} size="lg" className="gap-2 w-full sm:w-auto shrink-0">
           <Plus className="h-4 w-4" />
           Add Announcement
         </Button>
@@ -294,24 +294,24 @@ function EventRow({
           : "border-border"
       }`}
     >
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {isCurrent && (
             <Badge variant="default" className="shrink-0 animate-pulse">
               NOW
             </Badge>
           )}
-          <span className="text-xl font-semibold truncate">{event.name}</span>
+          <span className="text-base sm:text-xl font-semibold truncate">{event.name}</span>
         </div>
 
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 shrink-0"
+          className="gap-1.5 sm:gap-2 shrink-0"
           onClick={() => setShowResults(!showResults)}
         >
           <Trophy className="h-4 w-4" />
-          Results
+          <span className="hidden sm:inline">Results</span>
           {showResults ? (
             <ChevronDown className="h-3 w-3" />
           ) : (
@@ -360,21 +360,22 @@ function ResultsPanel({ eventId }: { eventId: number }) {
       {data.results.map((r) => (
         <div
           key={`${r.placement}-${r.coupleNumber}`}
-          className={`flex items-center gap-4 rounded-md px-4 py-3 ${
+          className={cn(
+            "flex items-center gap-2 sm:gap-4 rounded-md px-3 sm:px-4 py-2 sm:py-3",
             r.placement <= 3
               ? "bg-amber-50/50 dark:bg-amber-950/20"
-              : "bg-muted/30"
-          }`}
+              : "bg-muted/30",
+          )}
         >
-          <span className="text-2xl font-bold w-12 text-right tabular-nums">
+          <span className="text-lg sm:text-2xl font-bold w-8 sm:w-12 text-right tabular-nums shrink-0">
             {formatPlacement(r.placement)}
           </span>
           {r.coupleNumber != null && (
-            <Badge variant="outline" className="text-base font-mono px-3">
+            <Badge variant="outline" className="text-sm sm:text-base font-mono px-2 sm:px-3 shrink-0">
               #{r.coupleNumber}
             </Badge>
           )}
-          <span className="text-xl font-medium">
+          <span className="text-sm sm:text-xl font-medium truncate">
             {r.leaderName} &amp; {r.followerName}
           </span>
         </div>
@@ -410,10 +411,10 @@ function NoteCard<
   });
 
   return (
-    <div className="ml-6 my-2 flex items-start gap-3 rounded-lg border-l-4 border-amber-500 bg-amber-50/10 dark:bg-amber-950/10 px-4 py-3">
+    <div className="ml-2 sm:ml-6 my-2 flex items-start gap-2 sm:gap-3 rounded-lg border-l-4 border-amber-500 bg-amber-50/10 dark:bg-amber-950/10 px-3 sm:px-4 py-2 sm:py-3">
       <Megaphone className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-lg leading-relaxed whitespace-pre-wrap">
+        <p className="text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
           {note.content}
         </p>
         <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
