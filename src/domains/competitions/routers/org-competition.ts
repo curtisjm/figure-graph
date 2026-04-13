@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
@@ -73,51 +73,74 @@ export const orgCompetitionRouter = router({
         ),
       });
 
-      const regIds = orgRegs.map((r) => r.id);
+      const regIdSet = new Set(orgRegs.map((r) => r.id));
 
-      // Find all entries with org members
+      // Batch: fetch all events, then all non-scratched entries for those events
       const allEvents = await db.query.competitionEvents.findMany({
         where: eq(competitionEvents.competitionId, input.competitionId),
         orderBy: asc(competitionEvents.position),
       });
 
+      const eventIds = allEvents.map((e) => e.id);
+      const allEntries =
+        eventIds.length > 0
+          ? await db.query.entries.findMany({
+              where: and(inArray(entries.eventId, eventIds), eq(entries.scratched, false)),
+            })
+          : [];
+
+      // Group entries by event and filter to org entries
+      const orgEntriesByEvent = new Map<number, typeof allEntries>();
+      for (const e of allEntries) {
+        if (!regIdSet.has(e.leaderRegistrationId) && !regIdSet.has(e.followerRegistrationId)) continue;
+        const arr = orgEntriesByEvent.get(e.eventId) ?? [];
+        arr.push(e);
+        orgEntriesByEvent.set(e.eventId, arr);
+      }
+
+      // Batch: fetch all registrations and users needed for enrichment
+      const allRegIds = [
+        ...new Set(
+          [...orgEntriesByEvent.values()]
+            .flat()
+            .flatMap((e) => [e.leaderRegistrationId, e.followerRegistrationId]),
+        ),
+      ];
+
+      const allRegsData =
+        allRegIds.length > 0
+          ? await db.query.competitionRegistrations.findMany({
+              where: inArray(competitionRegistrations.id, allRegIds),
+            })
+          : [];
+      const regMap = new Map(allRegsData.map((r) => [r.id, r]));
+
+      const allUserIds = [...new Set(allRegsData.map((r) => r.userId))];
+      const allUsers =
+        allUserIds.length > 0
+          ? await db.query.users.findMany({ where: inArray(users.id, allUserIds) })
+          : [];
+      const userMap = new Map(allUsers.map((u) => [u.id, u]));
+
+      // Assemble org events
       const orgEvents = [];
       for (const event of allEvents) {
-        const eventEntries = await db.query.entries.findMany({
-          where: and(eq(entries.eventId, event.id), eq(entries.scratched, false)),
+        const orgEntries = orgEntriesByEvent.get(event.id);
+        if (!orgEntries || orgEntries.length === 0) continue;
+
+        const couples = orgEntries.map((entry) => {
+          const leaderReg = regMap.get(entry.leaderRegistrationId);
+          const followerReg = regMap.get(entry.followerRegistrationId);
+          const leader = leaderReg ? userMap.get(leaderReg.userId) : null;
+          const follower = followerReg ? userMap.get(followerReg.userId) : null;
+
+          return {
+            entryId: entry.id,
+            coupleNumber: leaderReg?.competitorNumber ?? followerReg?.competitorNumber ?? null,
+            leaderName: leader?.displayName ?? null,
+            followerName: follower?.displayName ?? null,
+          };
         });
-
-        // Filter to entries involving org members
-        const orgEntries = eventEntries.filter(
-          (e) => regIds.includes(e.leaderRegistrationId) || regIds.includes(e.followerRegistrationId),
-        );
-
-        if (orgEntries.length === 0) continue;
-
-        // Enrich with names and numbers
-        const couples = await Promise.all(
-          orgEntries.map(async (entry) => {
-            const leaderReg = await db.query.competitionRegistrations.findFirst({
-              where: eq(competitionRegistrations.id, entry.leaderRegistrationId),
-            });
-            const followerReg = await db.query.competitionRegistrations.findFirst({
-              where: eq(competitionRegistrations.id, entry.followerRegistrationId),
-            });
-            const leader = leaderReg
-              ? await db.query.users.findFirst({ where: eq(users.id, leaderReg.userId) })
-              : null;
-            const follower = followerReg
-              ? await db.query.users.findFirst({ where: eq(users.id, followerReg.userId) })
-              : null;
-
-            return {
-              entryId: entry.id,
-              coupleNumber: leaderReg?.competitorNumber ?? followerReg?.competitorNumber ?? null,
-              leaderName: leader?.displayName ?? null,
-              followerName: follower?.displayName ?? null,
-            };
-          }),
-        );
 
         orgEvents.push({
           eventId: event.id,
@@ -155,52 +178,82 @@ export const orgCompetitionRouter = router({
         ),
       });
 
-      const enriched = await Promise.all(
-        orgRegs.map(async (reg) => {
-          const user = await db.query.users.findFirst({
-            where: eq(users.id, reg.userId),
-          });
+      if (orgRegs.length === 0) return [];
 
-          // Get entries for this registration
-          const leaderEntries = await db.query.entries.findMany({
-            where: and(eq(entries.leaderRegistrationId, reg.id), eq(entries.scratched, false)),
-          });
-          const followerEntries = await db.query.entries.findMany({
-            where: and(eq(entries.followerRegistrationId, reg.id), eq(entries.scratched, false)),
-          });
-          const allEntries = [...leaderEntries, ...followerEntries];
+      const regIds = orgRegs.map((r) => r.id);
 
-          const eventNames = await Promise.all(
-            allEntries.map(async (e) => {
-              const event = await db.query.competitionEvents.findFirst({
-                where: eq(competitionEvents.id, e.eventId),
-              });
-              return event?.name ?? "Unknown";
-            }),
-          );
+      // Batch: fetch all users, entries, events, and payments in parallel
+      const [allUsersData, allLeaderEntries, allFollowerEntries, allEventsData, allPaymentsData] =
+        await Promise.all([
+          db.query.users.findMany({
+            where: inArray(users.id, orgRegs.map((r) => r.userId)),
+          }),
+          db.query.entries.findMany({
+            where: and(inArray(entries.leaderRegistrationId, regIds), eq(entries.scratched, false)),
+          }),
+          db.query.entries.findMany({
+            where: and(
+              inArray(entries.followerRegistrationId, regIds),
+              eq(entries.scratched, false),
+            ),
+          }),
+          db.query.competitionEvents.findMany({
+            where: eq(competitionEvents.competitionId, input.competitionId),
+          }),
+          db.query.payments.findMany({
+            where: inArray(payments.registrationId, regIds),
+          }),
+        ]);
 
-          // Get payment info
-          const regPayments = await db.query.payments.findMany({
-            where: eq(payments.registrationId, reg.id),
-          });
-          const totalPaid = regPayments.reduce(
-            (sum, p) => sum + parseFloat(p.amount),
-            0,
-          );
+      const userMap = new Map(allUsersData.map((u) => [u.id, u]));
+      const eventMap = new Map(allEventsData.map((e) => [e.id, e]));
 
-          return {
-            registrationId: reg.id,
-            userId: reg.userId,
-            displayName: user?.displayName ?? null,
-            competitorNumber: reg.competitorNumber,
-            checkedIn: reg.checkedIn,
-            amountOwed: parseFloat(reg.amountOwed),
-            totalPaid,
-            eventCount: allEntries.length,
-            eventNames,
-          };
-        }),
-      );
+      // Group entries by registration
+      const entriesByReg = new Map<number, typeof allLeaderEntries>();
+      for (const e of allLeaderEntries) {
+        const arr = entriesByReg.get(e.leaderRegistrationId) ?? [];
+        arr.push(e);
+        entriesByReg.set(e.leaderRegistrationId, arr);
+      }
+      for (const e of allFollowerEntries) {
+        const arr = entriesByReg.get(e.followerRegistrationId) ?? [];
+        arr.push(e);
+        entriesByReg.set(e.followerRegistrationId, arr);
+      }
+
+      // Group payments by registration
+      const paymentsByReg = new Map<number, typeof allPaymentsData>();
+      for (const p of allPaymentsData) {
+        const arr = paymentsByReg.get(p.registrationId) ?? [];
+        arr.push(p);
+        paymentsByReg.set(p.registrationId, arr);
+      }
+
+      // Assemble results
+      const enriched = orgRegs.map((reg) => {
+        const user = userMap.get(reg.userId);
+        const regEntries = entriesByReg.get(reg.id) ?? [];
+        const eventNames = regEntries.map(
+          (e) => eventMap.get(e.eventId)?.name ?? "Unknown",
+        );
+        const regPayments = paymentsByReg.get(reg.id) ?? [];
+        const totalPaid = regPayments.reduce(
+          (sum, p) => sum + parseFloat(p.amount),
+          0,
+        );
+
+        return {
+          registrationId: reg.id,
+          userId: reg.userId,
+          displayName: user?.displayName ?? null,
+          competitorNumber: reg.competitorNumber,
+          checkedIn: reg.checkedIn,
+          amountOwed: parseFloat(reg.amountOwed),
+          totalPaid,
+          eventCount: regEntries.length,
+          eventNames,
+        };
+      });
 
       return enriched;
     }),
@@ -219,65 +272,124 @@ export const orgCompetitionRouter = router({
         ),
       });
 
-      const regIds = orgRegs.map((r) => r.id);
+      if (orgRegs.length === 0) return [];
+
+      const regIdSet = new Set(orgRegs.map((r) => r.id));
+
+      // Batch: fetch events, all rounds, and all published meta
       const events = await db.query.competitionEvents.findMany({
         where: eq(competitionEvents.competitionId, input.competitionId),
         orderBy: asc(competitionEvents.position),
       });
 
+      const eventIds = events.map((e) => e.id);
+      if (eventIds.length === 0) return [];
+
+      const allRounds = await db.query.rounds.findMany({
+        where: inArray(rounds.eventId, eventIds),
+        orderBy: asc(rounds.position),
+      });
+
+      const roundIds = allRounds.map((r) => r.id);
+      const allMeta =
+        roundIds.length > 0
+          ? await db.query.roundResultsMeta.findMany({
+              where: and(
+                inArray(roundResultsMeta.roundId, roundIds),
+                eq(roundResultsMeta.status, "published"),
+              ),
+            })
+          : [];
+
+      const publishedRoundIds = new Set(allMeta.map((m) => m.roundId));
+
+      // Find the last published round per event (the "final" published round)
+      const roundsByEvent = new Map<number, typeof allRounds>();
+      for (const r of allRounds) {
+        const arr = roundsByEvent.get(r.eventId) ?? [];
+        arr.push(r);
+        roundsByEvent.set(r.eventId, arr);
+      }
+
+      const publishedRoundByEvent = new Map<number, (typeof allRounds)[0]>();
+      for (const [eventId, eventRounds] of roundsByEvent) {
+        for (const round of eventRounds) {
+          if (publishedRoundIds.has(round.id)) {
+            publishedRoundByEvent.set(eventId, round);
+          }
+        }
+      }
+
+      const publishedFinalRoundIds = [...publishedRoundByEvent.values()].map((r) => r.id);
+      if (publishedFinalRoundIds.length === 0) return [];
+
+      // Batch: fetch all final results for published rounds
+      const allResults = await db.query.finalResults.findMany({
+        where: inArray(finalResults.roundId, publishedFinalRoundIds),
+        orderBy: asc(finalResults.placement),
+      });
+
+      // Batch: fetch all entries referenced by results
+      const allEntryIds = [...new Set(allResults.map((r) => r.entryId))];
+      const allEntriesData =
+        allEntryIds.length > 0
+          ? await db.query.entries.findMany({ where: inArray(entries.id, allEntryIds) })
+          : [];
+      const entryMap = new Map(allEntriesData.map((e) => [e.id, e]));
+
+      // Batch: fetch all registrations and users
+      const allRegIds = [
+        ...new Set(
+          allEntriesData.flatMap((e) => [e.leaderRegistrationId, e.followerRegistrationId]),
+        ),
+      ];
+      const allRegsData =
+        allRegIds.length > 0
+          ? await db.query.competitionRegistrations.findMany({
+              where: inArray(competitionRegistrations.id, allRegIds),
+            })
+          : [];
+      const regMap = new Map(allRegsData.map((r) => [r.id, r]));
+
+      const allUserIds = [...new Set(allRegsData.map((r) => r.userId))];
+      const allUsersData =
+        allUserIds.length > 0
+          ? await db.query.users.findMany({ where: inArray(users.id, allUserIds) })
+          : [];
+      const userMap = new Map(allUsersData.map((u) => [u.id, u]));
+
+      // Group results by round
+      const resultsByRound = new Map<number, typeof allResults>();
+      for (const r of allResults) {
+        const arr = resultsByRound.get(r.roundId) ?? [];
+        arr.push(r);
+        resultsByRound.set(r.roundId, arr);
+      }
+
+      // Assemble event results
       const eventResults = [];
       for (const event of events) {
-        // Find published final round
-        const eventRounds = await db.query.rounds.findMany({
-          where: eq(rounds.eventId, event.id),
-          orderBy: asc(rounds.position),
-        });
-
-        let publishedRound = null;
-        for (const round of eventRounds) {
-          const meta = await db.query.roundResultsMeta.findFirst({
-            where: and(
-              eq(roundResultsMeta.roundId, round.id),
-              eq(roundResultsMeta.status, "published"),
-            ),
-          });
-          if (meta) publishedRound = round;
-        }
+        const publishedRound = publishedRoundByEvent.get(event.id);
         if (!publishedRound) continue;
 
-        // Get results for org members only
-        const results = await db.query.finalResults.findMany({
-          where: eq(finalResults.roundId, publishedRound.id),
-          orderBy: asc(finalResults.placement),
-        });
+        const results = resultsByRound.get(publishedRound.id) ?? [];
 
         const orgResults = [];
         for (const r of results) {
           if (r.danceName !== null) continue; // Only overall placements
 
-          const entry = await db.query.entries.findFirst({
-            where: eq(entries.id, r.entryId),
-          });
+          const entry = entryMap.get(r.entryId);
           if (!entry) continue;
 
-          // Check if either partner is in org
           const isOrgEntry =
-            regIds.includes(entry.leaderRegistrationId) ||
-            regIds.includes(entry.followerRegistrationId);
+            regIdSet.has(entry.leaderRegistrationId) ||
+            regIdSet.has(entry.followerRegistrationId);
           if (!isOrgEntry) continue;
 
-          const leaderReg = await db.query.competitionRegistrations.findFirst({
-            where: eq(competitionRegistrations.id, entry.leaderRegistrationId),
-          });
-          const followerReg = await db.query.competitionRegistrations.findFirst({
-            where: eq(competitionRegistrations.id, entry.followerRegistrationId),
-          });
-          const leader = leaderReg
-            ? await db.query.users.findFirst({ where: eq(users.id, leaderReg.userId) })
-            : null;
-          const follower = followerReg
-            ? await db.query.users.findFirst({ where: eq(users.id, followerReg.userId) })
-            : null;
+          const leaderReg = regMap.get(entry.leaderRegistrationId);
+          const followerReg = regMap.get(entry.followerRegistrationId);
+          const leader = leaderReg ? userMap.get(leaderReg.userId) : null;
+          const follower = followerReg ? userMap.get(followerReg.userId) : null;
 
           orgResults.push({
             placement: r.placement,

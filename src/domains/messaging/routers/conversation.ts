@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, sql, desc, inArray } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "@shared/auth/trpc";
 import { db } from "@shared/db";
@@ -141,72 +141,122 @@ export const conversationRouter = router({
 
     if (myMemberships.length === 0) return [];
 
-    const results = [];
+    const convIds = myMemberships.map((m) => m.conversationId);
 
-    for (const membership of myMemberships) {
-      const conversation = await db.query.conversations.findFirst({
-        where: eq(conversations.id, membership.conversationId),
-      });
+    // Batch: fetch all conversations
+    const allConversations = await db
+      .select()
+      .from(conversations)
+      .where(inArray(conversations.id, convIds));
 
-      if (!conversation) continue;
+    const convMap = new Map(allConversations.map((c) => [c.id, c]));
 
-      // Get last message
-      const [lastMessage] = await db
+    // Batch: fetch last message per conversation using subquery + join
+    const latestMsgSub = db
+      .select({
+        conversationId: messages.conversationId,
+        maxId: sql<number>`max(${messages.id})`.as("max_id"),
+      })
+      .from(messages)
+      .where(inArray(messages.conversationId, convIds))
+      .groupBy(messages.conversationId)
+      .as("latest_msg");
+
+    const lastMessages = await db
+      .select({
+        id: messages.id,
+        body: messages.body,
+        senderId: messages.senderId,
+        conversationId: messages.conversationId,
+        createdAt: messages.createdAt,
+      })
+      .from(messages)
+      .innerJoin(
+        latestMsgSub,
+        and(
+          eq(messages.conversationId, latestMsgSub.conversationId),
+          eq(messages.id, latestMsgSub.maxId),
+        ),
+      );
+
+    const lastMessageMap = new Map(
+      lastMessages.map((m) => [
+        m.conversationId,
+        { id: m.id, body: m.body, senderId: m.senderId, createdAt: m.createdAt },
+      ]),
+    );
+
+    // Batch: fetch unread counts for all conversations in one query
+    const unreadRows = await db
+      .select({
+        conversationId: conversationMembers.conversationId,
+        count: sql<number>`count(${messages.id})::int`,
+      })
+      .from(conversationMembers)
+      .leftJoin(
+        messages,
+        and(
+          eq(messages.conversationId, conversationMembers.conversationId),
+          sql`(${conversationMembers.lastReadAt} IS NULL OR ${messages.createdAt} > ${conversationMembers.lastReadAt})`,
+        ),
+      )
+      .where(
+        and(
+          eq(conversationMembers.userId, ctx.userId),
+          inArray(conversationMembers.conversationId, convIds),
+        ),
+      )
+      .groupBy(conversationMembers.conversationId);
+
+    const unreadMap = new Map(
+      unreadRows.map((r) => [r.conversationId, r.count]),
+    );
+
+    // Batch: fetch other user info for all DM conversations
+    const dmConvIds = allConversations
+      .filter((c) => c.type === "direct")
+      .map((c) => c.id);
+
+    const otherUserMap = new Map<number, { userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }>();
+    if (dmConvIds.length > 0) {
+      const otherMembers = await db
         .select({
-          id: messages.id,
-          body: messages.body,
-          senderId: messages.senderId,
-          createdAt: messages.createdAt,
+          conversationId: conversationMembers.conversationId,
+          userId: conversationMembers.userId,
+          username: users.username,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
         })
-        .from(messages)
-        .where(eq(messages.conversationId, membership.conversationId))
-        .orderBy(desc(messages.createdAt))
-        .limit(1);
-
-      // Get unread count
-      const unreadResult = membership.lastReadAt
-        ? await db.execute(sql`
-            SELECT count(*)::int as count FROM ${messages}
-            WHERE conversation_id = ${membership.conversationId}
-            AND created_at > ${membership.lastReadAt}
-          `)
-        : await db.execute(sql`
-            SELECT count(*)::int as count FROM ${messages}
-            WHERE conversation_id = ${membership.conversationId}
-          `);
-
-      const unreadCount = (unreadResult.rows[0] as { count: number }).count ?? 0;
-
-      // For DMs, get the other user info
-      let otherUser = null;
-      if (conversation.type === "direct") {
-        const otherMember = await db
-          .select({
-            userId: conversationMembers.userId,
-            username: users.username,
-            displayName: users.displayName,
-            avatarUrl: users.avatarUrl,
-          })
-          .from(conversationMembers)
-          .innerJoin(users, eq(users.id, conversationMembers.userId))
-          .where(
-            and(
-              eq(conversationMembers.conversationId, membership.conversationId),
-              sql`${conversationMembers.userId} != ${ctx.userId}`
-            )
+        .from(conversationMembers)
+        .innerJoin(users, eq(users.id, conversationMembers.userId))
+        .where(
+          and(
+            inArray(conversationMembers.conversationId, dmConvIds),
+            sql`${conversationMembers.userId} != ${ctx.userId}`
           )
-          .limit(1);
+        );
 
-        if (otherMember.length > 0) {
-          otherUser = otherMember[0];
-        }
+      for (const m of otherMembers) {
+        otherUserMap.set(m.conversationId, {
+          userId: m.userId,
+          username: m.username,
+          displayName: m.displayName,
+          avatarUrl: m.avatarUrl,
+        });
       }
+    }
+
+    // Assemble results
+    const results = [];
+    for (const membership of myMemberships) {
+      const conversation = convMap.get(membership.conversationId);
+      if (!conversation) continue;
 
       results.push({
         ...conversation,
-        lastMessage: lastMessage ?? null,
-        unreadCount,
-        otherUser,
+        lastMessage: lastMessageMap.get(membership.conversationId) ?? null,
+        unreadCount: unreadMap.get(membership.conversationId) ?? 0,
+        otherUser: otherUserMap.get(membership.conversationId) ?? null,
       });
     }
 

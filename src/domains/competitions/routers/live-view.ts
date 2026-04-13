@@ -61,54 +61,84 @@ export const liveViewRouter = router({
         activeEventId = round?.eventId ?? null;
       }
 
-      // Enrich events with status and couple numbers
-      const eventData = await Promise.all(
-        events.map(async (event) => {
-          const eventRounds = await db.query.rounds.findMany({
-            where: eq(rounds.eventId, event.id),
-          });
+      // Batch: fetch all rounds and entries for all events
+      const eventIds = events.map((e) => e.id);
 
-          // Determine event status
-          let status: "upcoming" | "in_progress" | "completed" = "upcoming";
-          if (event.id === activeEventId) {
-            status = "in_progress";
-          } else if (eventRounds.length > 0 && eventRounds.every((r) => r.status === "completed")) {
-            status = "completed";
-          } else if (eventRounds.some((r) => r.status !== "pending")) {
-            status = "completed"; // Past events that finished
-          }
+      const [allRounds, allEntries] = await Promise.all([
+        eventIds.length > 0
+          ? db.query.rounds.findMany({ where: inArray(rounds.eventId, eventIds) })
+          : [],
+        eventIds.length > 0
+          ? db.query.entries.findMany({
+              where: and(inArray(entries.eventId, eventIds), eq(entries.scratched, false)),
+            })
+          : [],
+      ]);
 
-          // Get couple numbers
-          const eventEntries = await db.query.entries.findMany({
-            where: and(eq(entries.eventId, event.id), eq(entries.scratched, false)),
-          });
+      // Group rounds and entries by eventId
+      const roundsByEvent = new Map<number, typeof allRounds>();
+      for (const r of allRounds) {
+        const arr = roundsByEvent.get(r.eventId) ?? [];
+        arr.push(r);
+        roundsByEvent.set(r.eventId, arr);
+      }
 
-          const regIds = [
-            ...new Set(eventEntries.flatMap((e) => [e.leaderRegistrationId, e.followerRegistrationId])),
-          ];
+      const entriesByEvent = new Map<number, typeof allEntries>();
+      for (const e of allEntries) {
+        const arr = entriesByEvent.get(e.eventId) ?? [];
+        arr.push(e);
+        entriesByEvent.set(e.eventId, arr);
+      }
 
-          const regs =
-            regIds.length > 0
-              ? await db.query.competitionRegistrations.findMany({
-                  where: inArray(competitionRegistrations.id, regIds),
-                })
-              : [];
+      // Batch: fetch all registrations needed for couple numbers
+      const allRegIds = [
+        ...new Set(allEntries.flatMap((e) => [e.leaderRegistrationId, e.followerRegistrationId])),
+      ];
 
-          const coupleNumbers = [
-            ...new Set(regs.map((r) => r.competitorNumber).filter((n): n is number => n !== null)),
-          ].sort((a, b) => a - b);
+      const allRegs =
+        allRegIds.length > 0
+          ? await db.query.competitionRegistrations.findMany({
+              where: inArray(competitionRegistrations.id, allRegIds),
+            })
+          : [];
 
-          return {
-            id: event.id,
-            name: event.name,
-            sessionId: event.sessionId,
-            position: event.position,
-            status,
-            coupleNumbers,
-            entryCount: eventEntries.length,
-          };
-        }),
-      );
+      const regMap = new Map(allRegs.map((r) => [r.id, r]));
+
+      // Assemble event data
+      const eventData = events.map((event) => {
+        const eventRounds = roundsByEvent.get(event.id) ?? [];
+        const eventEntries = entriesByEvent.get(event.id) ?? [];
+
+        // Determine event status
+        let status: "upcoming" | "in_progress" | "completed" = "upcoming";
+        if (event.id === activeEventId) {
+          status = "in_progress";
+        } else if (eventRounds.length > 0 && eventRounds.every((r) => r.status === "completed")) {
+          status = "completed";
+        } else if (eventRounds.some((r) => r.status !== "pending")) {
+          status = "completed"; // Past events that finished
+        }
+
+        // Get couple numbers from pre-fetched regs
+        const coupleNumbers = [
+          ...new Set(
+            eventEntries
+              .flatMap((e) => [e.leaderRegistrationId, e.followerRegistrationId])
+              .map((id) => regMap.get(id)?.competitorNumber)
+              .filter((n): n is number => n !== null && n !== undefined),
+          ),
+        ].sort((a, b) => a - b);
+
+        return {
+          id: event.id,
+          name: event.name,
+          sessionId: event.sessionId,
+          position: event.position,
+          status,
+          coupleNumbers,
+          entryCount: eventEntries.length,
+        };
+      });
 
       // Get announcement notes (projector-visible only)
       const notes = await db.query.announcementNotes.findMany({
@@ -184,81 +214,105 @@ export const liveViewRouter = router({
       });
       if (!event) return null;
 
-      // Find rounds with published results
+      // Fetch rounds and published meta in batch
       const eventRounds = await db.query.rounds.findMany({
         where: eq(rounds.eventId, input.eventId),
         orderBy: asc(rounds.position),
       });
 
-      const publishedRounds = [];
-      for (const round of eventRounds) {
-        const meta = await db.query.roundResultsMeta.findFirst({
-          where: and(
-            eq(roundResultsMeta.roundId, round.id),
-            eq(roundResultsMeta.status, "published"),
-          ),
-        });
-        if (meta) publishedRounds.push(round);
+      if (eventRounds.length === 0) return { eventName: event.name, rounds: [] };
+
+      const roundIds = eventRounds.map((r) => r.id);
+      const allMeta = await db.query.roundResultsMeta.findMany({
+        where: and(
+          inArray(roundResultsMeta.roundId, roundIds),
+          eq(roundResultsMeta.status, "published"),
+        ),
+      });
+
+      const publishedRoundIds = new Set(allMeta.map((m) => m.roundId));
+      const publishedRounds = eventRounds.filter((r) => publishedRoundIds.has(r.id));
+
+      if (publishedRounds.length === 0) return { eventName: event.name, rounds: [] };
+
+      // Batch: fetch all final results for published rounds
+      const publishedIds = publishedRounds.map((r) => r.id);
+      const allFinalResults = await db.query.finalResults.findMany({
+        where: inArray(finalResults.roundId, publishedIds),
+        orderBy: asc(finalResults.placement),
+      });
+
+      // Group results by round
+      const resultsByRound = new Map<number, typeof allFinalResults>();
+      for (const r of allFinalResults) {
+        const arr = resultsByRound.get(r.roundId) ?? [];
+        arr.push(r);
+        resultsByRound.set(r.roundId, arr);
       }
 
-      // Get results for published rounds
-      const results = await Promise.all(
-        publishedRounds.map(async (round) => {
-          const roundResults = await db.query.finalResults.findMany({
-            where: and(
-              eq(finalResults.roundId, round.id),
-              isNull(finalResults.danceName),
-            ),
-            orderBy: asc(finalResults.placement),
-          });
+      // Collect all entry IDs we need
+      const allEntryIds = [...new Set(allFinalResults.map((r) => r.entryId))];
 
-          // If no overall results (single dance), get all results
-          const actualResults =
-            roundResults.length > 0
-              ? roundResults
-              : await db.query.finalResults.findMany({
-                  where: eq(finalResults.roundId, round.id),
-                  orderBy: asc(finalResults.placement),
-                });
+      // Batch: fetch all entries
+      const allEntriesData =
+        allEntryIds.length > 0
+          ? await db.query.entries.findMany({ where: inArray(entries.id, allEntryIds) })
+          : [];
+      const entryMap = new Map(allEntriesData.map((e) => [e.id, e]));
 
-          // Enrich with names
-          const enriched = await Promise.all(
-            actualResults.map(async (r) => {
-              const entry = await db.query.entries.findFirst({
-                where: eq(entries.id, r.entryId),
-              });
-              if (!entry) return { ...r, coupleNumber: null, leaderName: null, followerName: null };
+      // Collect all registration IDs from entries
+      const allRegIds = [
+        ...new Set(
+          allEntriesData.flatMap((e) => [e.leaderRegistrationId, e.followerRegistrationId]),
+        ),
+      ];
 
-              const leaderReg = await db.query.competitionRegistrations.findFirst({
-                where: eq(competitionRegistrations.id, entry.leaderRegistrationId),
-              });
-              const followerReg = await db.query.competitionRegistrations.findFirst({
-                where: eq(competitionRegistrations.id, entry.followerRegistrationId),
-              });
+      // Batch: fetch all registrations
+      const allRegs =
+        allRegIds.length > 0
+          ? await db.query.competitionRegistrations.findMany({
+              where: inArray(competitionRegistrations.id, allRegIds),
+            })
+          : [];
+      const regMap = new Map(allRegs.map((r) => [r.id, r]));
 
-              const leader = leaderReg
-                ? await db.query.users.findFirst({ where: eq(users.id, leaderReg.userId) })
-                : null;
-              const follower = followerReg
-                ? await db.query.users.findFirst({ where: eq(users.id, followerReg.userId) })
-                : null;
+      // Batch: fetch all users
+      const allUserIds = [...new Set(allRegs.map((r) => r.userId))];
+      const allUsers =
+        allUserIds.length > 0
+          ? await db.query.users.findMany({ where: inArray(users.id, allUserIds) })
+          : [];
+      const userMap = new Map(allUsers.map((u) => [u.id, u]));
 
-              return {
-                ...r,
-                coupleNumber: leaderReg?.competitorNumber ?? followerReg?.competitorNumber ?? null,
-                leaderName: leader?.displayName ?? null,
-                followerName: follower?.displayName ?? null,
-              };
-            }),
-          );
+      // Assemble results
+      const results = publishedRounds.map((round) => {
+        const roundResults = resultsByRound.get(round.id) ?? [];
+        const overallResults = roundResults.filter((r) => r.danceName === null);
+        const actualResults = overallResults.length > 0 ? overallResults : roundResults;
+
+        const enriched = actualResults.map((r) => {
+          const entry = entryMap.get(r.entryId);
+          if (!entry) return { ...r, coupleNumber: null, leaderName: null, followerName: null };
+
+          const leaderReg = regMap.get(entry.leaderRegistrationId);
+          const followerReg = regMap.get(entry.followerRegistrationId);
+          const leader = leaderReg ? userMap.get(leaderReg.userId) : null;
+          const follower = followerReg ? userMap.get(followerReg.userId) : null;
 
           return {
-            roundId: round.id,
-            roundType: round.roundType,
-            results: enriched,
+            ...r,
+            coupleNumber: leaderReg?.competitorNumber ?? followerReg?.competitorNumber ?? null,
+            leaderName: leader?.displayName ?? null,
+            followerName: follower?.displayName ?? null,
           };
-        }),
-      );
+        });
+
+        return {
+          roundId: round.id,
+          roundType: round.roundType,
+          results: enriched,
+        };
+      });
 
       return { eventName: event.name, rounds: results };
     }),
