@@ -1,9 +1,23 @@
 import { z } from "zod";
 import { and, eq, desc, isNull } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "@shared/auth/trpc";
 import { db } from "@shared/db";
 import { users } from "@shared/schema";
 import { posts } from "@social/schema";
+import { memberships } from "@orgs/schema";
+
+async function requireOrgMembership(orgId: number, userId: string) {
+  const membership = await db.query.memberships.findFirst({
+    where: and(eq(memberships.orgId, orgId), eq(memberships.userId, userId)),
+  });
+  if (!membership) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You must be a member of this organization",
+    });
+  }
+}
 
 export const postRouter = router({
   get: publicProcedure
@@ -17,6 +31,7 @@ export const postRouter = router({
           visibility: posts.visibility,
           title: posts.title,
           body: posts.body,
+          visibilityOrgId: posts.visibilityOrgId,
           routineId: posts.routineId,
           publishedAt: posts.publishedAt,
           createdAt: posts.createdAt,
@@ -37,10 +52,20 @@ export const postRouter = router({
         title: z.string().min(1).max(200),
         body: z.string(),
         visibility: z.enum(["public", "followers", "organization"]).default("public"),
+        visibilityOrgId: z.number().optional(),
         publish: z.boolean().default(false),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (input.visibility === "organization") {
+        if (!input.visibilityOrgId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "visibilityOrgId is required when visibility is 'organization'",
+          });
+        }
+        await requireOrgMembership(input.visibilityOrgId, ctx.userId);
+      }
       const [post] = await db
         .insert(posts)
         .values({
@@ -49,6 +74,7 @@ export const postRouter = router({
           title: input.title,
           body: input.body,
           visibility: input.visibility,
+          visibilityOrgId: input.visibility === "organization" ? input.visibilityOrgId! : null,
           publishedAt: input.publish ? new Date() : null,
         })
         .returning();
@@ -61,9 +87,19 @@ export const postRouter = router({
         routineId: z.number(),
         body: z.string().max(1000).nullable(),
         visibility: z.enum(["public", "followers", "organization"]).default("public"),
+        visibilityOrgId: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (input.visibility === "organization") {
+        if (!input.visibilityOrgId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "visibilityOrgId is required when visibility is 'organization'",
+          });
+        }
+        await requireOrgMembership(input.visibilityOrgId, ctx.userId);
+      }
       const [post] = await db
         .insert(posts)
         .values({
@@ -72,6 +108,7 @@ export const postRouter = router({
           body: input.body,
           routineId: input.routineId,
           visibility: input.visibility,
+          visibilityOrgId: input.visibility === "organization" ? input.visibilityOrgId! : null,
           publishedAt: new Date(),
         })
         .returning();
@@ -85,13 +122,32 @@ export const postRouter = router({
         title: z.string().min(1).max(200).optional(),
         body: z.string().optional(),
         visibility: z.enum(["public", "followers", "organization"]).optional(),
+        visibilityOrgId: z.number().nullable().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updates } = input;
+      const { id, visibilityOrgId, ...updates } = input;
+      if (input.visibility === "organization") {
+        if (visibilityOrgId === undefined || visibilityOrgId === null) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "visibilityOrgId is required when visibility is 'organization'",
+          });
+        }
+        await requireOrgMembership(visibilityOrgId, ctx.userId);
+      }
+      const setValues: Record<string, unknown> = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+      if (input.visibility === "organization") {
+        setValues.visibilityOrgId = visibilityOrgId;
+      } else if (input.visibility) {
+        setValues.visibilityOrgId = null;
+      }
       const [post] = await db
         .update(posts)
-        .set({ ...updates, updatedAt: new Date() })
+        .set(setValues)
         .where(and(eq(posts.id, id), eq(posts.authorId, ctx.userId)))
         .returning();
       return post ?? null;

@@ -13,6 +13,7 @@ interface ArticleEditorProps {
     title: string | null;
     body: string | null;
     visibility: "public" | "followers" | "organization";
+    visibilityOrgId: number | null;
     publishedAt: Date | null;
   };
 }
@@ -24,6 +25,13 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
   const [visibility, setVisibility] = useState<"public" | "followers" | "organization">(
     existingPost?.visibility ?? "public"
   );
+  const [visibilityOrgId, setVisibilityOrgId] = useState<number | null>(
+    existingPost?.visibilityOrgId ?? null
+  );
+
+  const { data: userOrgs } = trpc.org.listUserOrgs.useQuery(undefined, {
+    enabled: visibility === "organization",
+  });
 
   const createMutation = trpc.post.createArticle.useMutation({
     onSuccess: (post) => {
@@ -49,9 +57,10 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
         title: title || undefined,
         body: body || undefined,
         visibility,
+        visibilityOrgId: visibility === "organization" ? visibilityOrgId : null,
       });
     }, 2000);
-  }, [existingPost, title, body, visibility, updateMutation]);
+  }, [existingPost, title, body, visibility, visibilityOrgId, updateMutation]);
 
   useEffect(() => {
     autoSave();
@@ -65,9 +74,16 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
         title: title || undefined,
         body: body || undefined,
         visibility,
+        visibilityOrgId: visibility === "organization" ? visibilityOrgId : null,
       });
     } else {
-      createMutation.mutate({ title, body, visibility, publish: false });
+      createMutation.mutate({
+        title,
+        body,
+        visibility,
+        visibilityOrgId: visibility === "organization" ? visibilityOrgId ?? undefined : undefined,
+        publish: false,
+      });
     }
   };
 
@@ -82,7 +98,13 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
       });
       publishMutation.mutate({ id: existingPost.id });
     } else {
-      createMutation.mutate({ title, body, visibility, publish: true });
+      createMutation.mutate({
+        title,
+        body,
+        visibility,
+        visibilityOrgId: visibility === "organization" ? visibilityOrgId ?? undefined : undefined,
+        publish: true,
+      });
     }
   };
 
@@ -109,12 +131,31 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
         <select
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={visibility}
-          onChange={(e) => setVisibility(e.target.value as typeof visibility)}
+          onChange={(e) => {
+            const v = e.target.value as typeof visibility;
+            setVisibility(v);
+            if (v !== "organization") setVisibilityOrgId(null);
+          }}
         >
           <option value="public">Public</option>
           <option value="followers">Followers only</option>
           <option value="organization">Organization only</option>
         </select>
+
+        {visibility === "organization" && userOrgs && userOrgs.length > 0 && (
+          <select
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={visibilityOrgId ?? ""}
+            onChange={(e) => setVisibilityOrgId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">Select organization</option>
+            {userOrgs.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         {!isPublished && (
           <Button variant="outline" onClick={handleSaveDraft} disabled={isPending}>

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createCaller, createPublicCaller, createUser, truncateAll } from "../../setup/helpers";
+import { createCaller, createPublicCaller, createUser, createOrg, truncateAll } from "../../setup/helpers";
 
 describe("post router", () => {
   let userId: string;
@@ -97,6 +97,93 @@ describe("post router", () => {
       const drafts = await caller.post.myDrafts();
       expect(drafts).toHaveLength(1);
       expect(drafts[0].title).toBe("Draft");
+    });
+  });
+
+  describe("organization visibility", () => {
+    it("sets visibilityOrgId when creating an article with org visibility", async () => {
+      const caller = createCaller(userId);
+      const org = await createOrg(userId);
+      const post = await caller.post.createArticle({
+        title: "Org Post",
+        body: "Content",
+        visibility: "organization",
+        visibilityOrgId: org.id,
+      });
+      expect(post.visibility).toBe("organization");
+      expect(post.visibilityOrgId).toBe(org.id);
+    });
+
+    it("rejects org visibility without visibilityOrgId", async () => {
+      const caller = createCaller(userId);
+      await expect(
+        caller.post.createArticle({
+          title: "Bad Post",
+          body: "Content",
+          visibility: "organization",
+        })
+      ).rejects.toThrow("visibilityOrgId is required");
+    });
+
+    it("rejects org visibility for non-member", async () => {
+      const owner = await createUser({ username: "orgowner" });
+      const org = await createOrg(owner.id);
+      const caller = createCaller(userId);
+      await expect(
+        caller.post.createArticle({
+          title: "Not My Org",
+          body: "Content",
+          visibility: "organization",
+          visibilityOrgId: org.id,
+        })
+      ).rejects.toThrow("You must be a member");
+    });
+
+    it("clears visibilityOrgId when updating away from org visibility", async () => {
+      const caller = createCaller(userId);
+      const org = await createOrg(userId);
+      const post = await caller.post.createArticle({
+        title: "Org Post",
+        body: "Content",
+        visibility: "organization",
+        visibilityOrgId: org.id,
+      });
+      const updated = await caller.post.update({
+        id: post.id,
+        visibility: "public",
+      });
+      expect(updated!.visibility).toBe("public");
+      expect(updated!.visibilityOrgId).toBeNull();
+    });
+
+    it("sets visibilityOrgId on routine share with org visibility", async () => {
+      const caller = createCaller(userId);
+      const org = await createOrg(userId);
+      // Create a routine first — use routine router if available, else insert directly
+      const post = await caller.post.createRoutineShare({
+        routineId: 1,
+        body: "Shared routine",
+        visibility: "organization",
+        visibilityOrgId: org.id,
+      });
+      expect(post.visibility).toBe("organization");
+      expect(post.visibilityOrgId).toBe(org.id);
+    });
+
+    it("returns visibilityOrgId from get", async () => {
+      const caller = createCaller(userId);
+      const org = await createOrg(userId);
+      const post = await caller.post.createArticle({
+        title: "Org Article",
+        body: "Content",
+        visibility: "organization",
+        visibilityOrgId: org.id,
+        publish: true,
+      });
+
+      const publicCaller = createPublicCaller();
+      const result = await publicCaller.post.get({ id: post.id });
+      expect(result!.visibilityOrgId).toBe(org.id);
     });
   });
 });

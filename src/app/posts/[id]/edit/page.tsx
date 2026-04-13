@@ -34,6 +34,7 @@ export default function EditPostPage({
           title: post.title,
           body: post.body,
           visibility: post.visibility as "public" | "followers" | "organization",
+          visibilityOrgId: post.visibilityOrgId,
           publishedAt: post.publishedAt,
         }}
       />
