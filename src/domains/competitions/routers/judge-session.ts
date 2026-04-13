@@ -29,29 +29,37 @@ import {
 } from "@competitions/lib/judge-auth";
 import { createJudgeAblyToken } from "@competitions/lib/ably-comp";
 
-// ── Rate limiter ──────────────────────────────────────────────────
+// ── Rate limiter (failed attempts only) ──────────────────────────
 
 const AUTH_RATE_LIMIT = 5;
 const AUTH_RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
-const authAttempts = new Map<string, { count: number; resetAt: number }>();
+const authFailures = new Map<string, { count: number; resetAt: number }>();
 
+/** Reject if too many failed attempts for this comp code. */
 function checkAuthRateLimit(compCode: string): void {
   const key = compCode.toUpperCase();
   const now = Date.now();
-  const entry = authAttempts.get(key);
+  const entry = authFailures.get(key);
 
-  if (!entry || now > entry.resetAt) {
-    authAttempts.set(key, { count: 1, resetAt: now + AUTH_RATE_WINDOW_MS });
-    return;
-  }
-
-  entry.count++;
-  if (entry.count > AUTH_RATE_LIMIT) {
+  if (entry && now <= entry.resetAt && entry.count >= AUTH_RATE_LIMIT) {
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
       message: "Too many authentication attempts. Please try again later.",
     });
+  }
+}
+
+/** Record a failed authentication attempt. */
+function recordAuthFailure(compCode: string): void {
+  const key = compCode.toUpperCase();
+  const now = Date.now();
+  const entry = authFailures.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    authFailures.set(key, { count: 1, resetAt: now + AUTH_RATE_WINDOW_MS });
+  } else {
+    entry.count++;
   }
 }
 
@@ -83,12 +91,14 @@ export const judgeSessionRouter = router({
         where: eq(competitions.compCode, input.compCode.toUpperCase()),
       });
       if (!comp || !comp.masterPasswordHash) {
+        recordAuthFailure(input.compCode);
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
       }
 
       // Verify master password
       const valid = await compare(input.masterPassword, comp.masterPasswordHash);
       if (!valid) {
+        recordAuthFailure(input.compCode);
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
       }
 
@@ -100,6 +110,7 @@ export const judgeSessionRouter = router({
         ),
       });
       if (!assignment) {
+        recordAuthFailure(input.compCode);
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
       }
 
