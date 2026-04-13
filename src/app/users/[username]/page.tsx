@@ -1,4 +1,4 @@
-import { eq, and, asc, desc, isNotNull, sql } from "drizzle-orm";
+import { eq, and, asc, desc, isNotNull, or, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@shared/db";
@@ -99,7 +99,30 @@ export default async function UserProfilePage({
     }
   }
 
-  // Fetch published posts if visible
+  // Build post visibility filter based on viewer's relationship to the author
+  let postVisibilityFilter;
+  if (isOwnProfile) {
+    // Author sees all their own published posts regardless of visibility
+    postVisibilityFilter = undefined;
+  } else if (currentUserId) {
+    // Authenticated viewer: public + followers-only (if following) + org-only (if member)
+    postVisibilityFilter = or(
+      eq(posts.visibility, "public"),
+      and(
+        eq(posts.visibility, "followers"),
+        sql`EXISTS (SELECT 1 FROM follows WHERE follower_id = ${currentUserId} AND following_id = ${user.id} AND status = 'active')`
+      ),
+      and(
+        eq(posts.visibility, "organization"),
+        sql`${posts.visibilityOrgId} IN (SELECT org_id FROM memberships WHERE user_id = ${currentUserId})`
+      )
+    );
+  } else {
+    // Unauthenticated: only public posts
+    postVisibilityFilter = eq(posts.visibility, "public");
+  }
+
+  // Fetch published posts if visible, filtered by post-level visibility
   const userPosts = canViewContent
     ? await db
         .select({
@@ -112,7 +135,8 @@ export default async function UserProfilePage({
         .where(
           and(
             eq(posts.authorId, user.id),
-            isNotNull(posts.publishedAt)
+            isNotNull(posts.publishedAt),
+            postVisibilityFilter
           )
         )
         .orderBy(desc(posts.publishedAt))
