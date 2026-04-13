@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createCaller, createUser, createOrg, createInvite, truncateAll } from "../../setup/helpers";
+import { createCaller, createUser, createOrg, truncateAll } from "../../setup/helpers";
 
 describe("invite router", () => {
   let owner: { id: string };
@@ -9,6 +9,40 @@ describe("invite router", () => {
     await truncateAll();
     owner = await createUser({ username: "owner" });
     invitee = await createUser({ username: "invitee" });
+  });
+
+  describe("sendInvite", () => {
+    it("sends a direct invite", async () => {
+      const org = await createOrg(owner.id, { membershipModel: "invite" });
+      const caller = createCaller(owner.id);
+      const invite = await caller.invite.sendInvite({
+        orgId: org.id,
+        userId: invitee.id,
+      });
+      expect(invite.orgId).toBe(org.id);
+      expect(invite.invitedUserId).toBe(invitee.id);
+      expect(invite.status).toBe("pending");
+    });
+
+    it("rejects invite for existing member", async () => {
+      const org = await createOrg(owner.id, { membershipModel: "open" });
+      const memberCaller = createCaller(invitee.id);
+      await memberCaller.membership.join({ orgId: org.id });
+
+      const ownerCaller = createCaller(owner.id);
+      await expect(
+        ownerCaller.invite.sendInvite({ orgId: org.id, userId: invitee.id })
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+    });
+
+    it("rejects duplicate pending invite", async () => {
+      const org = await createOrg(owner.id);
+      const caller = createCaller(owner.id);
+      await caller.invite.sendInvite({ orgId: org.id, userId: invitee.id });
+      await expect(
+        caller.invite.sendInvite({ orgId: org.id, userId: invitee.id })
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+    });
   });
 
   describe("generateLink", () => {
@@ -24,8 +58,10 @@ describe("invite router", () => {
   describe("accept", () => {
     it("accepts a direct invite", async () => {
       const org = await createOrg(owner.id);
-      const invite = await createInvite(org.id, owner.id, {
-        invitedUserId: invitee.id,
+      const ownerCaller = createCaller(owner.id);
+      const invite = await ownerCaller.invite.sendInvite({
+        orgId: org.id,
+        userId: invitee.id,
       });
 
       const inviteeCaller = createCaller(invitee.id);
@@ -53,8 +89,10 @@ describe("invite router", () => {
   describe("decline", () => {
     it("declines a direct invite", async () => {
       const org = await createOrg(owner.id);
-      const invite = await createInvite(org.id, owner.id, {
-        invitedUserId: invitee.id,
+      const ownerCaller = createCaller(owner.id);
+      const invite = await ownerCaller.invite.sendInvite({
+        orgId: org.id,
+        userId: invitee.id,
       });
 
       const inviteeCaller = createCaller(invitee.id);
@@ -66,9 +104,8 @@ describe("invite router", () => {
   describe("listMyInvites", () => {
     it("returns pending invites for the user", async () => {
       const org = await createOrg(owner.id);
-      await createInvite(org.id, owner.id, {
-        invitedUserId: invitee.id,
-      });
+      const ownerCaller = createCaller(owner.id);
+      await ownerCaller.invite.sendInvite({ orgId: org.id, userId: invitee.id });
 
       const inviteeCaller = createCaller(invitee.id);
       const invites = await inviteeCaller.invite.listMyInvites();

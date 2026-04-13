@@ -4,7 +4,6 @@ import {
   createPublicCaller,
   createUser,
   createOrg,
-  createEntry,
   createJudge,
   truncateAll,
 } from "../../setup/helpers";
@@ -59,7 +58,11 @@ describe("results router", () => {
       partnerUsername: follower.username!,
     });
 
-    const entry = await createEntry(eventId, reg.self.id, reg.partner!.id);
+    const entry = await leaderCaller.entry.create({
+      eventId,
+      leaderRegistrationId: reg.self.id,
+      followerRegistrationId: reg.partner!.id,
+    });
 
     return { leader, follower, reg, entry };
   }
