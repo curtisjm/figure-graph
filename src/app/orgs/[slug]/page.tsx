@@ -5,8 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import { Card, CardContent } from "@shared/ui/card";
 import { OrgHeader } from "@orgs/components/org-header";
 import { MemberList } from "@orgs/components/member-list";
+import { OrgPostComposer } from "@orgs/components/org-post-composer";
 
-function OrgPosts({ orgId }: { orgId: number }) {
+function OrgPosts({ orgId, canPost }: { orgId: number; canPost: boolean }) {
   const { data, isLoading } = trpc.orgPost.listByOrg.useQuery({ orgId, limit: 20 });
 
   if (isLoading) {
@@ -15,12 +16,12 @@ function OrgPosts({ orgId }: { orgId: number }) {
 
   const posts = data?.items ?? [];
 
-  if (posts.length === 0) {
-    return <p className="text-muted-foreground text-sm">No posts yet.</p>;
-  }
-
   return (
     <div className="flex flex-col gap-3">
+      {canPost && <OrgPostComposer orgId={orgId} />}
+      {posts.length === 0 && !canPost && (
+        <p className="text-muted-foreground text-sm">No posts yet.</p>
+      )}
       {posts.map((post) => (
         <Card key={post.id}>
           <CardContent className="p-4">
@@ -95,7 +96,7 @@ export default function OrgProfilePage() {
           </TabsList>
 
           <TabsContent value="posts" className="mt-4">
-            <OrgPosts orgId={org.id} />
+            <OrgPosts orgId={org.id} canPost={isOwner || membership?.role === "admin"} />
           </TabsContent>
 
           <TabsContent value="members" className="mt-4">
