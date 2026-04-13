@@ -71,8 +71,15 @@ export function ArticleEditor({ existingPost }: ArticleEditorProps) {
     }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (existingPost) {
+      clearTimeout(saveTimeoutRef.current);
+      await updateMutation.mutateAsync({
+        id: existingPost.id,
+        title: title || undefined,
+        body: body || undefined,
+        visibility,
+      });
       publishMutation.mutate({ id: existingPost.id });
     } else {
       createMutation.mutate({ title, body, visibility, publish: true });
