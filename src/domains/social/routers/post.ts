@@ -6,6 +6,7 @@ import { db } from "@shared/db";
 import { users } from "@shared/schema";
 import { posts } from "@social/schema";
 import { memberships } from "@orgs/schema";
+import { isPostAccessible } from "@social/lib/post-access";
 
 async function requireOrgMembership(orgId: number, userId: string) {
   const membership = await db.query.memberships.findFirst({
@@ -22,16 +23,16 @@ async function requireOrgMembership(orgId: number, userId: string) {
 export const postRouter = router({
   get: publicProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const [post] = await db
         .select({
           id: posts.id,
           authorId: posts.authorId,
           type: posts.type,
           visibility: posts.visibility,
+          visibilityOrgId: posts.visibilityOrgId,
           title: posts.title,
           body: posts.body,
-          visibilityOrgId: posts.visibilityOrgId,
           routineId: posts.routineId,
           publishedAt: posts.publishedAt,
           createdAt: posts.createdAt,
@@ -43,7 +44,11 @@ export const postRouter = router({
         .from(posts)
         .leftJoin(users, eq(posts.authorId, users.id))
         .where(eq(posts.id, input.id));
-      return post ?? null;
+
+      if (!post) return null;
+
+      const accessible = await isPostAccessible(post, ctx.userId);
+      return accessible ? post : null;
     }),
 
   createArticle: protectedProcedure

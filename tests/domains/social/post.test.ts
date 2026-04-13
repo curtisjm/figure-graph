@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createCaller, createPublicCaller, createUser, createOrg, truncateAll } from "../../setup/helpers";
+import { createCaller, createPublicCaller, createUser, createOrg, createPost, truncateAll } from "../../setup/helpers";
 
 describe("post router", () => {
   let userId: string;
@@ -34,7 +34,7 @@ describe("post router", () => {
   });
 
   describe("get", () => {
-    it("returns a post by id", async () => {
+    it("returns a published public post by id", async () => {
       const caller = createCaller(userId);
       const post = await caller.post.createArticle({
         title: "Test",
@@ -46,6 +46,110 @@ describe("post router", () => {
       const result = await publicCaller.post.get({ id: post.id });
       expect(result).not.toBeNull();
       expect(result!.title).toBe("Test");
+    });
+
+    it("hides draft posts from unauthenticated users", async () => {
+      const caller = createCaller(userId);
+      const post = await caller.post.createArticle({
+        title: "Draft",
+        body: "Secret draft",
+      });
+
+      const publicCaller = createPublicCaller();
+      const result = await publicCaller.post.get({ id: post.id });
+      expect(result).toBeNull();
+    });
+
+    it("hides draft posts from other authenticated users", async () => {
+      const caller = createCaller(userId);
+      const post = await caller.post.createArticle({
+        title: "Draft",
+        body: "Secret draft",
+      });
+
+      const other = await createUser({ username: "other" });
+      const otherCaller = createCaller(other.id);
+      const result = await otherCaller.post.get({ id: post.id });
+      expect(result).toBeNull();
+    });
+
+    it("allows author to see their own draft", async () => {
+      const caller = createCaller(userId);
+      const post = await caller.post.createArticle({
+        title: "My Draft",
+        body: "Secret draft",
+      });
+
+      const result = await caller.post.get({ id: post.id });
+      expect(result).not.toBeNull();
+      expect(result!.title).toBe("My Draft");
+    });
+
+    it("hides followers-only posts from unauthenticated users", async () => {
+      const post = await createPost(userId, {
+        visibility: "followers",
+        publishedAt: new Date(),
+      });
+
+      const publicCaller = createPublicCaller();
+      const result = await publicCaller.post.get({ id: post.id });
+      expect(result).toBeNull();
+    });
+
+    it("hides followers-only posts from non-followers", async () => {
+      const post = await createPost(userId, {
+        visibility: "followers",
+        publishedAt: new Date(),
+      });
+
+      const other = await createUser({ username: "stranger" });
+      const otherCaller = createCaller(other.id);
+      const result = await otherCaller.post.get({ id: post.id });
+      expect(result).toBeNull();
+    });
+
+    it("shows followers-only posts to followers", async () => {
+      const post = await createPost(userId, {
+        visibility: "followers",
+        publishedAt: new Date(),
+      });
+
+      const follower = await createUser({ username: "follower" });
+      const followerCaller = createCaller(follower.id);
+      await followerCaller.follow.follow({ targetUserId: userId });
+
+      const result = await followerCaller.post.get({ id: post.id });
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe(post.id);
+    });
+
+    it("hides org-only posts from non-members", async () => {
+      const org = await createOrg(userId);
+      const post = await createPost(userId, {
+        visibility: "organization",
+        visibilityOrgId: org.id,
+        publishedAt: new Date(),
+      });
+
+      const other = await createUser({ username: "outsider" });
+      const otherCaller = createCaller(other.id);
+      const result = await otherCaller.post.get({ id: post.id });
+      expect(result).toBeNull();
+    });
+
+    it("shows org-only posts to org members", async () => {
+      const org = await createOrg(userId);
+      const post = await createPost(userId, {
+        visibility: "organization",
+        visibilityOrgId: org.id,
+        publishedAt: new Date(),
+      });
+
+      // Owner is automatically a member via createOrg
+      const caller = createCaller(userId);
+      const result = await caller.post.get({ id: post.id });
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe(post.id);
     });
   });
 

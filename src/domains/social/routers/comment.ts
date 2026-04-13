@@ -5,11 +5,25 @@ import { db } from "@shared/db";
 import { users } from "@shared/schema";
 import { comments, posts } from "@social/schema";
 import { createNotification } from "@social/lib/notify";
+import { isPostAccessible } from "@social/lib/post-access";
 
 export const commentRouter = router({
   listByPost: publicProcedure
     .input(z.object({ postId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      // Verify the parent post is accessible before returning comments
+      const [post] = await db
+        .select({
+          authorId: posts.authorId,
+          visibility: posts.visibility,
+          visibilityOrgId: posts.visibilityOrgId,
+          publishedAt: posts.publishedAt,
+        })
+        .from(posts)
+        .where(eq(posts.id, input.postId));
+
+      if (!post || !(await isPostAccessible(post, ctx.userId))) return [];
+
       const topLevel = await db
         .select({
           id: comments.id,
@@ -55,7 +69,27 @@ export const commentRouter = router({
 
   replies: publicProcedure
     .input(z.object({ commentId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      // Find the parent comment's post and verify accessibility
+      const [parentComment] = await db
+        .select({ postId: comments.postId })
+        .from(comments)
+        .where(eq(comments.id, input.commentId));
+
+      if (!parentComment) return [];
+
+      const [post] = await db
+        .select({
+          authorId: posts.authorId,
+          visibility: posts.visibility,
+          visibilityOrgId: posts.visibilityOrgId,
+          publishedAt: posts.publishedAt,
+        })
+        .from(posts)
+        .where(eq(posts.id, parentComment.postId));
+
+      if (!post || !(await isPostAccessible(post, ctx.userId))) return [];
+
       return db
         .select({
           id: comments.id,

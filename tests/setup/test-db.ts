@@ -23,7 +23,7 @@ export type TestSchema = typeof schema;
 
 // Construct the URL from known constants so we don't depend on env propagation
 // from globalSetup to forked worker processes
-const PG_PORT = "5433";
+const PG_PORT = process.env.TEST_PG_PORT || "5433";
 const DB_NAME = "floorcraft_test";
 const PG_DIR = path.resolve(process.cwd(), ".pg-test");
 const DEFAULT_TEST_URL = `postgresql://${process.env.USER}@localhost:${PG_PORT}/${DB_NAME}?host=${PG_DIR}`;

@@ -1,8 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@shared/db";
 import { users } from "@shared/schema";
-import { posts } from "@social/schema";
+import { posts, follows } from "@social/schema";
+import { memberships } from "@orgs/schema";
 import { ArticleRenderer } from "@/domains/social/components/article-renderer";
 import { CommentThread } from "@/domains/social/components/comment-thread";
 import { Badge } from "@shared/ui/badge";
@@ -15,12 +17,15 @@ export default async function PostPage({
 }) {
   const { id } = await params;
   const db = getDb();
+  const { userId } = await auth();
 
   const [post] = await db
     .select({
       id: posts.id,
       authorId: posts.authorId,
       type: posts.type,
+      visibility: posts.visibility,
+      visibilityOrgId: posts.visibilityOrgId,
       title: posts.title,
       body: posts.body,
       routineId: posts.routineId,
@@ -35,6 +40,43 @@ export default async function PostPage({
     .where(eq(posts.id, parseInt(id, 10)));
 
   if (!post) notFound();
+
+  // Author can always see their own posts
+  const isAuthor = userId && post.authorId === userId;
+
+  if (!isAuthor) {
+    // Drafts are not visible to others
+    if (!post.publishedAt) notFound();
+
+    if (post.visibility === "followers") {
+      // Followers-only: must be authenticated and following
+      if (!userId || !post.authorId) notFound();
+      const [follow] = await db
+        .select({ id: follows.id })
+        .from(follows)
+        .where(
+          and(
+            eq(follows.followerId, userId),
+            eq(follows.followingId, post.authorId),
+            eq(follows.status, "active")
+          )
+        );
+      if (!follow) notFound();
+    } else if (post.visibility === "organization") {
+      // Org-only: must be authenticated and a member
+      if (!userId || !post.visibilityOrgId) notFound();
+      const [membership] = await db
+        .select({ id: memberships.id })
+        .from(memberships)
+        .where(
+          and(
+            eq(memberships.userId, userId),
+            eq(memberships.orgId, post.visibilityOrgId)
+          )
+        );
+      if (!membership) notFound();
+    }
+  }
 
   const authorName = post.authorDisplayName ?? post.authorUsername ?? "Anonymous";
 
