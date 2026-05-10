@@ -8,85 +8,135 @@
 :root {
   color-scheme: light;
 
-  /* shadcn/ui light theme */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
+  /* ── Atelier palette · light ──
+     Cool surfaces, no chromatic accent. The metals carry the brand. */
+  --background: oklch(0.987 0.001 95);   /* paper */
+  --foreground: oklch(0.07 0 0);         /* ink */
+  --card: oklch(1 0 0);                  /* surface */
+  --card-foreground: oklch(0.07 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --input-surface: oklch(0.961 0 0);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.869 0.005 56.366);
-  --chart-2: oklch(0.553 0.013 58.071);
-  --chart-3: oklch(0.444 0.011 73.639);
-  --chart-4: oklch(0.374 0.01 67.558);
-  --chart-5: oklch(0.268 0.007 34.298);
+  --popover-foreground: oklch(0.07 0 0);
+  --primary: oklch(0.07 0 0);            /* ink */
+  --primary-foreground: oklch(0.987 0 0);
+  --secondary: oklch(0.965 0 0);         /* layer */
+  --secondary-foreground: oklch(0.07 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.36 0 0);   /* graphite */
+  --accent: oklch(0.965 0 0);
+  --accent-foreground: oklch(0.07 0 0);
 
-  /* Ballroom level accent colors */
-  --bronze: #CD7F32;
-  --silver: #C0C0C0;
-  --gold: #FFD700;
+  /* Destructive maps to wine */
+  --destructive: oklch(0.40 0.10 18);
+  --destructive-foreground: oklch(0.987 0 0);
+
+  --border: oklch(0.92 0 0);             /* rule */
+  --input: oklch(0.92 0 0);
+  --input-surface: oklch(0.965 0 0);
+  --ring: oklch(0.55 0 0);
+
+  /* Charts — monochrome graphite scale */
+  --chart-1: oklch(0.14 0 0);
+  --chart-2: oklch(0.36 0 0);
+  --chart-3: oklch(0.55 0 0);
+  --chart-4: oklch(0.72 0 0);
+  --chart-5: oklch(0.87 0 0);
+
+  /* ── Refined semantics · material names, not signals ── */
+  --wine: #7a2228;       /* destructive · aged Bordeaux */
+  --wine-tint: rgba(122, 34, 40, 0.07);
+  --sage: #4d6651;       /* success · dusty herb */
+  --sage-tint: rgba(77, 102, 81, 0.08);
+  --clay: #a55a32;       /* warning · burnt terracotta */
+  --clay-tint: rgba(165, 90, 50, 0.08);
+
+  /* ── The Metals · full stacks (base · highlight · shadow · gleam · matte) ── */
+  --bronze-base: #8b5a2b;
+  --bronze-highlight: #d4a574;
+  --bronze-shadow: #4a2f18;
+  --bronze-gleam: #efd0a0;
+  --bronze-matte: #74553e;
+
+  --silver-base: #a8a8a8;
+  --silver-highlight: #f0f0f0;
+  --silver-shadow: #5a5a5a;
+  --silver-gleam: #ffffff;
+  --silver-matte: #8a8a8a;
+
+  --gold-base: #c8a560;       /* champagne — 18k, not 24k */
+  --gold-highlight: #e8cb8c;
+  --gold-shadow: #7a6238;
+  --gold-gleam: #f5e4c0;
+  --gold-matte: #9a8052;
+
+  /* Legacy aliases so existing text-bronze / border-bronze etc. still resolve */
+  --bronze: var(--bronze-base);
+  --silver: var(--silver-base);
+  --gold: var(--gold-base);
 
   --radius: 0.25rem;
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
+
+  /* Sidebar tokens */
+  --sidebar: oklch(0.987 0.001 95);
+  --sidebar-foreground: oklch(0.07 0 0);
+  --sidebar-primary: oklch(0.07 0 0);
+  --sidebar-primary-foreground: oklch(0.987 0 0);
+  --sidebar-accent: oklch(0.965 0 0);
+  --sidebar-accent-foreground: oklch(0.07 0 0);
+  --sidebar-border: oklch(0.92 0 0);
+  --sidebar-ring: oklch(0.55 0 0);
 }
 
 .dark {
   color-scheme: dark;
 
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.923 0.003 48.717);
-  --primary-foreground: oklch(0.216 0.006 56.043);
-  --secondary: oklch(0.268 0.007 34.298);
-  --secondary-foreground: oklch(0.985 0.001 106.423);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --input-surface: oklch(0.205 0 0);
-  --ring: oklch(0.553 0.013 58.071);
-  --chart-1: oklch(0.869 0.005 56.366);
-  --chart-2: oklch(0.553 0.013 58.071);
-  --chart-3: oklch(0.444 0.011 73.639);
-  --chart-4: oklch(0.374 0.01 67.558);
-  --chart-5: oklch(0.268 0.007 34.298);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+  /* ── Atelier palette · dark ── */
+  --background: oklch(0.07 0 0);         /* carbon */
+  --foreground: oklch(0.985 0 0);        /* chalk */
+  --card: oklch(0.13 0 0);               /* surface */
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.13 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.07 0 0);
+  --secondary: oklch(0.17 0 0);          /* layer */
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.17 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.17 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive: oklch(0.55 0.10 18);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.22 0 0);
+  --input: oklch(0.22 0 0);
+  --input-surface: oklch(0.17 0 0);
+  --ring: oklch(0.55 0 0);
+
+  --chart-1: oklch(0.95 0 0);
+  --chart-2: oklch(0.78 0 0);
+  --chart-3: oklch(0.60 0 0);
+  --chart-4: oklch(0.42 0 0);
+  --chart-5: oklch(0.25 0 0);
+
+  /* Semantics — lighter for dark backgrounds */
+  --wine: #b5575c;
+  --wine-tint: rgba(181, 87, 92, 0.12);
+  --sage: #9bb29f;
+  --sage-tint: rgba(155, 178, 159, 0.10);
+  --clay: #d49874;
+  --clay-tint: rgba(212, 152, 116, 0.10);
+
+  /* Metals stay absolute across modes — they're materials, not surfaces */
+
+  --sidebar: oklch(0.07 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.07 0 0);
+  --sidebar-accent: oklch(0.17 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.22 0 0);
+  --sidebar-ring: oklch(0.55 0 0);
 }
 
 @theme inline {
@@ -123,7 +173,12 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Level accent colors as Tailwind utilities */
+  /* Refined semantic colors as Tailwind utilities (text-wine, bg-sage, etc.) */
+  --color-wine: var(--wine);
+  --color-sage: var(--sage);
+  --color-clay: var(--clay);
+
+  /* Level accent colors as Tailwind utilities (preserved for backward compat) */
   --color-bronze: var(--bronze);
   --color-silver: var(--silver);
   --color-gold: var(--gold);
@@ -138,6 +193,7 @@
 
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
 }
 
 @layer base {
@@ -154,6 +210,178 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE METALS — five treatments × three levels = fifteen utilities
+   Built from CSS gradients only. No WebGL, no canvas, no images.
+   ═══════════════════════════════════════════════════════════════ */
+@layer utilities {
+
+  /* ─── Treatment 1: POLISHED — diagonal linear, fresh polished metal ─── */
+  .metal-bronze-polished {
+    background: linear-gradient(135deg,
+      var(--bronze-shadow) 0%,
+      var(--bronze-base) 22%,
+      var(--bronze-highlight) 48%,
+      var(--bronze-gleam) 55%,
+      var(--bronze-highlight) 62%,
+      var(--bronze-base) 82%,
+      var(--bronze-shadow) 100%);
+  }
+  .metal-silver-polished {
+    background: linear-gradient(135deg,
+      var(--silver-shadow) 0%,
+      var(--silver-base) 22%,
+      var(--silver-highlight) 48%,
+      var(--silver-gleam) 55%,
+      var(--silver-highlight) 62%,
+      var(--silver-base) 82%,
+      var(--silver-shadow) 100%);
+  }
+  .metal-gold-polished {
+    background: linear-gradient(135deg,
+      var(--gold-shadow) 0%,
+      var(--gold-base) 22%,
+      var(--gold-highlight) 48%,
+      var(--gold-gleam) 55%,
+      var(--gold-highlight) 62%,
+      var(--gold-base) 82%,
+      var(--gold-shadow) 100%);
+  }
+
+  /* ─── Treatment 2: BRUSHED — conic gradient, medal-disc feel ─── */
+  .metal-bronze-brushed {
+    background: conic-gradient(from 220deg at 50% 50%,
+      var(--bronze-shadow), var(--bronze-base), var(--bronze-highlight),
+      var(--bronze-gleam), var(--bronze-highlight), var(--bronze-base),
+      var(--bronze-shadow), var(--bronze-shadow));
+  }
+  .metal-silver-brushed {
+    background: conic-gradient(from 220deg at 50% 50%,
+      var(--silver-shadow), var(--silver-base), var(--silver-highlight),
+      var(--silver-gleam), var(--silver-highlight), var(--silver-base),
+      var(--silver-shadow), var(--silver-shadow));
+  }
+  .metal-gold-brushed {
+    background: conic-gradient(from 220deg at 50% 50%,
+      var(--gold-shadow), var(--gold-base), var(--gold-highlight),
+      var(--gold-gleam), var(--gold-highlight), var(--gold-base),
+      var(--gold-shadow), var(--gold-shadow));
+  }
+
+  /* ─── Treatment 3: MATTE — desaturated, contemporary hardware ─── */
+  .metal-bronze-matte {
+    background: linear-gradient(160deg, #2a1a0d 0%, var(--bronze-matte) 50%, #2a1a0d 100%);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .metal-silver-matte {
+    background: linear-gradient(160deg, #3a3a3a 0%, var(--silver-matte) 50%, #3a3a3a 100%);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .metal-gold-matte {
+    background: linear-gradient(160deg, #5a4828 0%, var(--gold-matte) 50%, #5a4828 100%);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  /* ─── Treatment 4: INLAID TEXT — background-clip: text ─── */
+  .metal-text-bronze,
+  .metal-text-silver,
+  .metal-text-gold {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-weight: 500;
+  }
+  .metal-text-bronze {
+    background-image: linear-gradient(180deg,
+      var(--bronze-shadow) 0%, var(--bronze-base) 25%,
+      var(--bronze-highlight) 50%, var(--bronze-gleam) 62%,
+      var(--bronze-highlight) 70%, var(--bronze-base) 88%,
+      var(--bronze-shadow) 100%);
+  }
+  .metal-text-silver {
+    background-image: linear-gradient(180deg,
+      var(--silver-shadow) 0%, var(--silver-base) 25%,
+      var(--silver-highlight) 50%, var(--silver-gleam) 62%,
+      var(--silver-highlight) 70%, var(--silver-base) 88%,
+      var(--silver-shadow) 100%);
+  }
+  .metal-text-gold {
+    background-image: linear-gradient(180deg,
+      var(--gold-shadow) 0%, var(--gold-base) 25%,
+      var(--gold-highlight) 50%, var(--gold-gleam) 62%,
+      var(--gold-highlight) 70%, var(--gold-base) 88%,
+      var(--gold-shadow) 100%);
+  }
+
+  /* ─── Treatment 5: WHISPER — inline tag, monospace dot ─── */
+  .metal-whisper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: lowercase;
+    letter-spacing: 0;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .metal-whisper::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .metal-bronze-whisper {
+    background: color-mix(in oklch, var(--bronze-base) 8%, var(--card));
+    border-color: color-mix(in oklch, var(--bronze-base) 35%, var(--border));
+    color: var(--bronze-base);
+  }
+  .metal-bronze-whisper::before { background: var(--bronze-base); }
+
+  .metal-silver-whisper {
+    background: var(--muted);
+    border-color: var(--border);
+    color: var(--muted-foreground);
+  }
+  .metal-silver-whisper::before { background: var(--silver-matte); }
+
+  .metal-gold-whisper {
+    background: color-mix(in oklch, var(--gold-base) 8%, var(--card));
+    border-color: color-mix(in oklch, var(--gold-base) 35%, var(--border));
+    color: var(--gold-matte);
+  }
+  .metal-gold-whisper::before { background: var(--gold-base); }
+
+  /* Dark-mode legibility tweaks on whisper text */
+  .dark .metal-bronze-whisper { color: var(--bronze-highlight); }
+  .dark .metal-silver-whisper { color: var(--silver-highlight); }
+  .dark .metal-gold-whisper   { color: var(--gold-highlight); }
+
+  /* ─── Hover sheen sweep — cursor-driven, no autoplay ─── */
+  .metal-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .metal-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(105deg,
+      transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+    transform: translateX(-110%);
+    transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+    pointer-events: none;
+  }
+  .metal-shine:hover::after { transform: translateX(110%); }
 }
 
 .tiptap.ProseMirror {

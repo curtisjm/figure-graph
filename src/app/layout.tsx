@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans, Playfair_Display } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Providers } from "@shared/components/providers";
 import { OnboardingGuard } from "@shared/components/onboarding-guard";
@@ -8,14 +8,21 @@ import { MainNav } from "@shared/components/main-nav";
 import { cn } from "@shared/lib/utils";
 import "./globals.css";
 
-const notoSans = Noto_Sans({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
-const playfairDisplay = Playfair_Display({
+const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-heading",
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -34,7 +41,7 @@ export default function RootLayout({
       <html
         lang="en"
         suppressHydrationWarning
-        className={cn(notoSans.variable, playfairDisplay.variable)}
+        className={cn(inter.variable, fraunces.variable, jetBrainsMono.variable)}
       >
         <body className="font-sans antialiased">
           <Providers>
