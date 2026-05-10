@@ -125,9 +125,6 @@ importers:
       lucide-react:
         specifier: ^0.475.0
         version: 0.475.0(react@19.2.4)
-      metal-fx:
-        specifier: ^0.2.3
-        version: 0.2.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nanoid:
         specifier: ^5.1.7
         version: 5.1.7
@@ -5531,12 +5528,6 @@ packages:
   merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
-
-  metal-fx@0.2.3:
-    resolution: {integrity: sha512-eable4iGMMeJ511LcZZ86r0nDgnWSWk7zsC5t1XCS6erETjmY6dMww4uK6QMp2Fc1c5K+2AKiIbRzb7k63fwMw==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
 
   metro-babel-transformer@0.83.5:
     resolution: {integrity: sha512-d9FfmgUEVejTiSb7bkQeLRGl6aeno2UpuPm3bo3rCYwxewj03ymvOn8s8vnS4fBqAPQ+cE9iQM40wh7nGXR+eA==}
@@ -12494,11 +12485,6 @@ snapshots:
   merge-stream@2.0.0: {}
 
   merge2@1.4.1: {}
-
-  metal-fx@0.2.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    dependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
 
   metro-babel-transformer@0.83.5:
     dependencies:
